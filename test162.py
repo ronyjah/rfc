@@ -26,7 +26,10 @@ logging.basicConfig(format=format, level=logging.DEBUG,
 class Test162:
 
     def __init__(self,config):
-        self.__queue = Queue()
+        self.__queue_wan = Queue()
+        self.__queue_lan = Queue()
+        logging.info('self.__queue_size_inicio162')
+        logging.info(self.__queue.qsize())
         self.__config = config
         self.__interface = None
         self.__pkt = None
@@ -40,9 +43,9 @@ class Test162:
         self.__link_local_addr = self.__config.get('multicast','link_local_addr')
         self.__all_nodes_addr = self.__config.get('multicast','all_nodes_addr')
         self.__test_desc = self.__config.get('tests','1.6.2')
-        self.__packet_sniffer = PacketSniffer(self.__queue,self,self.__config)
-        self.__packet_sniffer.daemon=True
-        self.__packet_sniffer.start()
+        
+        #self.__packet_sniffer.daemon=True
+        
 
     #recebe o pacote
     #packetSniffer return pkt
@@ -62,14 +65,27 @@ class Test162:
         icmp_ra = ICMPv6ND_RA()
         sendp(et/ip/icmp_ra,iface=self.__wan_device_tr1)
 
+    def send_echo_request(self,pkt):
+        et = Ether(src=self.__wan_mac_tr1)#,\
+                   #dst=pkt[Ether].src)
+        ip = IPv6(src=self.__link_local_addr,\
+                  dst=self.__all_nodes_addr)
+        icmp_ra = ICMPv6ND_RA()
+        sendp(et/ip/icmp_ra,iface=self.__wan_device_tr1)
+
     def run(self):
-        
+        self.__packet_sniffer_wan = PacketSniffer('test162',self.__queue_wan,self,self.__config)
+        #self.__packet_sniffer.init()
+
+        self.__packet_sniffer_wan.start()
         logging.info(self.__test_desc)
         logging.info(self.__queue.qsize())
         while not self.__queue.full():
             pkt = self.__queue.get()
             if pkt.haslayer(ICMPv6ND_RS):
                 self.send_icmpv6_ra(pkt)
+                time.sleep(1)
+                break
                 #self.__valid = True
             #elif pkt.haslayer(ICMPv6ND_RA) and self.__valid == False:
                 #print('theardoffFalse')
@@ -80,4 +96,14 @@ class Test162:
                 #print('theardofftrue')
                 #self.turn_off_thread()
              #   return True
+        while not self.__queue.empty():
+            pkt = self.__queue.get()       
+        logging.info('Passo4-t162run_sttop-theard success')
+        logging.info('self.__queue_size_fim')
+        logging.info(self.__queue.qsize())  
+            #time.sleep(2)
+        self.__packet_sniffer_wan.stop()
+            #time.sleep(2)
+        return True
+     
         

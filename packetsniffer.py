@@ -10,11 +10,12 @@ from scapy.all import *
 from config import Config
 import time
 
-format = "%(asctime)s: %(message)s"
+format = "%(asctime)s: %(message)s [%(levelname)s] (%(threadName)-9s)"
 logging.basicConfig(format=format, level=logging.DEBUG,
                     datefmt="%H:%M:%S")
+
 class PacketSniffer(Thread):
-    def __init__(self,pass_queue,test,config):
+    def __init__(self,name,pass_queue,test,config):
         super(PacketSniffer,self).__init__()
         logging.info('Packet sniffer started')
         self.queue=pass_queue
@@ -22,15 +23,31 @@ class PacketSniffer(Thread):
         self.not_an_ap={}
         self.__test = test
         self.__interface = config.get('lan','lan_device')
+        self.__AsySnif = AsyncSniffer(iface=self.__interface,prn=self.PacketHandler)
+        #sniff(iface=self.__interface,prn=self.PacketHandler)
 
-        Thread(name='PacketHandler',target=PacketSniffer.run, daemon =True)
+        Thread(target=PacketSniffer.init(self),name=name)
+
+    #def create(self):
+        #self.__AsySnif = AsyncSniffer(iface=self.__interface,prn=self.PacketHandler)
+        #sniff(iface=self.__interface,prn=self.PacketHandler)
+        #self.__AsySnif.start()#
+
+    def init(self):
+        logging.info('AsyncSniffer start!!!!!!!!!!!!!!!!!!!!!!!!')
+        self.__AsySnif.start()
+    def stop(self):
+        logging.info('AsyncSniffer stop')
+        self.__AsySnif.stop()
 
     def run(self):
         #print('run')
-
-        #print (threading.currentThread().getName(), 'Run')
-        logging.info('Run')
-        sniff(iface=self.__interface,prn=self.PacketHandler)
+        #self.create()
+        print (threading.currentThread().getName(), 'Run')
+        #logging.info('Run')
+        #sniff(iface=self.__interface,prn=self.PacketHandler)
+        # if stop():
+        #     break
 
     def put_queue(self,value):
         self.queue.put(value)
@@ -39,8 +56,8 @@ class PacketSniffer(Thread):
         return self.queue.get()
 
     def PacketHandler(self,pkt):
-        logging.info('PacketHandler')
-        #print (threading.currentThread().getName(), 'PacketHandler')
+        logging.info('PacketHandler - incoming packeage')
+        print (threading.currentThread().getName(), 'PacketHandler info in thread message')
         #print('OLA MUNDO')
         #if pkt.haslayer(ICMP):
         self.put_queue(pkt)
@@ -49,14 +66,14 @@ class PacketSniffer(Thread):
         #   sig_str = -(256-ord(pkt.notdecoded[-4:-3]))
         #   mac_addr=""
         #   ssid=""
-        try:
-            pass
-            #print('handler')
-            # mac_addr=pkt.addr2
-            # ssid=pkt.info
-        except:
-            return
-        # if self.device_dict.has_key(pkt.addr2) and pkt.info!=self.device_dict[pkt.addr2]:
+        # try:
+        #     pass
+        #     #print('handler')
+        #     # mac_addr=pkt.addr2
+        #     # ssid=pkt.info
+        # except:
+        #     return
+        # # if self.device_dict.has_key(pkt.addr2) and pkt.info!=self.device_dict[pkt.addr2]:
         #     output= "DIS MAC:%s RSSI:%s " %(pkt.addr2,sig_str)
         #     print (output)
         #     self.device_dict.pop(pkt.addr2)

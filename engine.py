@@ -72,11 +72,11 @@ class Engine:
 
         logging.info('Application started with profile: ' + profile_name)
 
-        while True:
-            try:
-                self.__active_profile.execute(profile_name)
-            except BaseException as error:
-                logging.error(error)
+        #while True:
+            #try:
+        self.__active_profile.execute(profile_name)
+        #    except BaseException as error:
+        #        logging.error(error)
 
     def get_profile_names(self):
         profiles = []
