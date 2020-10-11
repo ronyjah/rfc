@@ -9,7 +9,13 @@ import argparse
 from scapy.all import *
 from config import Config
 import time
+from packetsniffer import PacketSniffer
+from test161 import Test161
+from engine import Engine
 
+format = "%(asctime)s: %(message)s"
+logging.basicConfig(format=format, level=logging.DEBUG,
+                    datefmt="%H:%M:%S")
 def read_config():
     lan_device = config.get('lan','lan_device')
     return lan_device
@@ -18,16 +24,18 @@ class RfcLan():
     def __init__(self,configdir):
         self.load_configuration(configdir)
         self.__view = None
-        self.__engine = None
+        self.__engine = Engine()
         self.__lan_device = self.__config.get('lan','lan_device')
         self.__src_rs_address = self.__config.get('lan', 'source_rs')
         self.__mac_address = self.__config.get('lan', 'mac_address')
+        self.__aprovado = None
+
         
     def load_configuration(self, conf_dir):
         configfile = conf_dir + '/rfclan.conf'
         configparser = ConfigParser()
         configparser.read(configfile)
-        logging.debug("Configuration loaded")
+        logging.info("Configuration loaded")
         
         self.__config = Config(configparser, configfile)
         self.__config.set('directories', 'conf_dir', conf_dir)
@@ -134,7 +142,15 @@ class RfcLan():
         #self.threaded_ns_tr1()
        #send_tr1_NS()
     
+    def set_aprovado(self,value):
+        self.__aprovado = value
+
+    def get_aprovado(self):
+        return self.__aprovado
+
+    
     def TestceRouter271cWAN(self):
+
         #self.send_tr1_RA()
         #self.send_tr1_ping()
         #self.threaded_ping_tr1()
@@ -198,27 +214,54 @@ class RfcLan():
         #self.threaded_ns_tr1()
        #send_tr1_NS()
             #TN1 send Router Solicitation to CE Test 2.7.1c
+
+    
+        currentQueue=Queue()
+
+        #object setup
+        print ('Initialising sniffer')
+        packet_sniffer_instance=PacketSniffer(currentQueue,self,self.__config)
+        print('1')
+        packet_sniffer_instance.daemon=True
+        print('2')
+        packet_sniffer_instance.start()
+        t161 = Test161(currentQueue,self.__config)
+        time.sleep(1)
+        print('Finished initialising sniffer')
         while 1:
+            #print('status test')
+            #print(self.get_aprovado())
             time.sleep(3)
-            self.TestceRouter_ICMP_MLR()
+            #self.TestceRouter_ICMP_MLR()
+            t161.run()
             time.sleep(1)
             tn1_et = Ether(src=self.__mac_address, dst='33:33:00:00:00:01')
             #tn1_ip = IPv6(src='fe80::2af1:eff:fe51:ffc6',dst='fe80::1')
             tn1_ip = IPv6(src='fe80::6543:1f0a:18e3:3749',dst='fe80::1')
             tn1_ns = ICMPv6ND_NS(tgt='fe80::1')
             tn1_op = ICMPv6NDOptDstLLAddr(type=1,lladdr=tn1_et.src)
-            #sendp(Ether()/IPv6()/ICMPv6ND_NS()/ICMPv6NDOptDstLLAddr(type=1,lladdr=Ether().src),iface=self.__lan_device)
+            
+            if t161.get_result() == True:
+                print('PRODUTO APROVADO')
+            elif t161.get_result() == False:
+                print('PRODUTO REPROVADO')
             
             sendp(tn1_et/tn1_ip/tn1_ns/tn1_op,iface=self.__lan_device)
+            sendp(Ether()/IPv6()/ICMPv6ND_RA(),iface=self.__lan_device)
             #time.sleep(1)
             #tn1_ip = IPv6(src='fe80::6543:1f0a:18e3:3749',dst='ff02::1:ff00:1')
             #sendp(tn1_et/tn1_ip/tn1_ns/tn1_op,iface=self.__lan_device)
 
     def main(self):
         try:
+
+            self.__engine.load_profiles(self.__config) # cria objetos dos equipamentos de teste
+            profile_name = self.__config.get('rfc', 'profile') # seleciona o equipamento
+            self.__engine.set_profile(profile_name) # função active dentro da classe do EUT. addsteps
+            self.__engine.start() # funcão execute
             #self.commonTestSetup11()
             # 
-            self.TestceRouter271cLAN()
+            #self.TestceRouter271cLAN()
             
             while 1:
                 pass
@@ -231,6 +274,8 @@ class RfcLan():
         except BaseException as error:
             logging.error(error)
             logging.info('Ooops... Aborting!')
+
+
 
 def init_RfcLan(configdir):
     rfclan = RfcLan(configdir)
