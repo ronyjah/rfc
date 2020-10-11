@@ -10,6 +10,7 @@ from scapy.all import *
 from config import Config
 import time
 from packetsniffer import PacketSniffer
+from commontestsetup1_1 import CommonTestSetup1_1
 
 # - Seleciona a interface
 # - recebe thread de captura das mensagens já iniciada na main
@@ -29,7 +30,7 @@ class Test162:
         self.__queue_wan = Queue()
         self.__queue_lan = Queue()
         logging.info('self.__queue_size_inicio162')
-        logging.info(self.__queue.qsize())
+        logging.info(self.__queue_wan.qsize())
         self.__config = config
         self.__interface = None
         self.__pkt = None
@@ -37,10 +38,21 @@ class Test162:
         self.__result = None
         self.__device_lan_tn1 = None
         self.__lan_mac_tn1 = None
- 
+        self.__ceRouter_mac_addr = None
+        self.__flag_M = None
+        self.__flag_O = None
+        self.__flag_chlim = None
+        self.__flag_L = None
+        self.__flag_A = None
+        self.__flag_R = None
+        self.__validlifetime = None
+        self.__preferredlifetime = None
+        self.__interval = None
+        self.__routerlifetime = None
+        self.__CommonSetup1_1 = CommonTestSetup1_1(self.__config)
         self.__wan_device_tr1 = self.__config.get('wan','device_wan_tr1')
         self.__wan_mac_tr1 = self.__config.get('wan','wan_mac_tr1')
-        self.__link_local_addr = self.__config.get('multicast','link_local_addr')
+        self.__link_local_addr = self.__config.get('wan','link_local_addr')
         self.__all_nodes_addr = self.__config.get('multicast','all_nodes_addr')
         self.__test_desc = self.__config.get('tests','1.6.2')
         
@@ -65,24 +77,71 @@ class Test162:
         icmp_ra = ICMPv6ND_RA()
         sendp(et/ip/icmp_ra,iface=self.__wan_device_tr1)
 
-    def send_echo_request(self,pkt):
-        et = Ether(src=self.__wan_mac_tr1)#,\
-                   #dst=pkt[Ether].src)
+    def send_echo_request_lan(self):
+        et = Ether(src=self.__wan_mac_tr1,\
+                   dst=self.__ceRouter_mac_addr)
         ip = IPv6(src=self.__link_local_addr,\
                   dst=self.__all_nodes_addr)
-        icmp_ra = ICMPv6ND_RA()
+        icmp_ra = ICMPv6EchoRequest()
         sendp(et/ip/icmp_ra,iface=self.__wan_device_tr1)
 
-    def run(self):
-        self.__packet_sniffer_wan = PacketSniffer('test162',self.__queue_wan,self,self.__config)
-        #self.__packet_sniffer.init()
+    def flags_partA(self):
+        self.__flag_M = self.__config.get('t1.6.2_flags_part_a','flag_m')
+        self.__flag_O = self.__config.get('t1.6.2_flags_part_a','flag_o')
+        self.__flag_chlim = self.__config.get('t1.6.2_flags_part_a','flag_chlim')
+        self.__flag_L = self.__config.get('t1.6.2_flags_part_a','flag_l')
+        self.__flag_A = self.__config.get('t1.6.2_flags_part_a','flag_a')
+        self.__flag_R = self.__config.get('t1.6.2_flags_part_a','flag_r')
+        self.__validlifetime = self.__config.get('t1.6.2_flags_part_a','validlifetime')
+        self.__preferredlifetime = self.__config.get('t1.6.2_flags_part_a','preferredlifetime')
+        self.__routerlifetime = self.__config.get('t1.6.2_flags_part_a','routerlifetime')
+        self.__intervalo = self.__config.get('t1.6.2_flags_part_a','intervalo')
 
+
+    def get_flag_M(self):
+        return int(self.__flag_M)
+        
+    def get_flag_O(self):
+        return int(self.__flag_O)
+
+    def get_flag_chlim(self):
+        return int(self.__flag_chlim)
+
+    def get_flag_L(self):
+        return  int(self.__flag_L)
+
+    def get_flag_A(self):
+        return int(self.__flag_A)
+
+    def get_flag_R(self):
+        return int(self.__flag_R)
+
+    def get_validlifetime(self):
+        return int(self.__validlifetime)
+
+    def get_preferredlifetime(self):
+        return int(self.__preferredlifetime)
+
+    def get_interval(self):
+        return int(self.__intervalo)
+
+    def get_routerlifetime(self):
+        return int(self.__routerlifetime)
+
+    def run(self):
+        #self.__packet_sniffer_wan = PacketSniffer('test162',self.__queue_wan,self,self.__config)
+        #self.__packet_sniffer.init()
+        self.flags_partA()
+        self.__CommonSetup1_1.set_flags_common_setup(self)
+        self.__CommonSetup1_1.send_tr1_RA()
+        time.sleep(100000000)
         self.__packet_sniffer_wan.start()
         logging.info(self.__test_desc)
-        logging.info(self.__queue.qsize())
-        while not self.__queue.full():
-            pkt = self.__queue.get()
+        logging.info(self.__queue_wan.qsize())
+        while not self.__queue_wan.full():
+            pkt = self.__queue_wan.get()
             if pkt.haslayer(ICMPv6ND_RS):
+                self.__ceRouter_mac_addr=pkt[Ether].src
                 self.send_icmpv6_ra(pkt)
                 time.sleep(1)
                 break
@@ -96,11 +155,11 @@ class Test162:
                 #print('theardofftrue')
                 #self.turn_off_thread()
              #   return True
-        while not self.__queue.empty():
-            pkt = self.__queue.get()       
+        while not self.__queue_wan.empty():
+            pkt = self.__queue_wan.get()       
         logging.info('Passo4-t162run_sttop-theard success')
         logging.info('self.__queue_size_fim')
-        logging.info(self.__queue.qsize())  
+        logging.info(self.__queue_wan.qsize())  
             #time.sleep(2)
         self.__packet_sniffer_wan.stop()
             #time.sleep(2)
