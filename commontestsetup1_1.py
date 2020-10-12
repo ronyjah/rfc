@@ -100,13 +100,25 @@ class CommonTestSetup1_1:
         return DHCP6OptIA_NA()
     
     def opt_ia_pd(self):
-        return DHCP6OptIA_PD()
+        # optcode    : ShortEnumField                      = (25)
+        # optlen     : FieldLenField                       = (None)
+        # iaid       : XIntField                           = (None)
+        # T1         : IntField                            = (None)
+        # T2         : IntField                            = (None)
+        # iapdopt    : PacketListField                     = ([])
+        return DHCP6OptIA_PD(iaid = self.__config.get('setup1-1_advertise','iaid'),\
+                            T1 = self.__config.get('setup1-1_advertise','t1'),\
+                            T2 = self.__config.get('setup1-1_advertise','t2'),\
+                            iapdopt=DHCP6OptIAAddress(addr=self.__config.get('setup1-1_advertise','ia_pd_address'),\
+                                                        preflft=self.__config.get('setup1-1_advertise','ia_pd_pref_lifetime'),\
+                                                        validlft=self.__config.get('setup1-1_advertise','ia_pd_validtime')))
 
     def opt_dns_server(self):
-        return DHCP6OptDNSServers()
+        return DHCP6OptDNSServers(dnsservers=[self.__config.get('setup1-1_advertise','dns_rec_name_server')])
 
     def opt_dns_domain(self):
-        return DHCP6OptDNSDomains()
+        #dnsdomains : DomainNameListField                 = ([])
+        return DHCP6OptDNSDomains(dnsdomains=[self.__config.get('setup1-1_advertise','domain_search')])
 
     def send_tr1_RA(self):
         # tr1_et = Ether(src=self.__wan_mac_tr1)
