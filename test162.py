@@ -146,6 +146,8 @@ class Test162:
         self.flags_partA()
         self.__CommonSetup1_1.set_flags_common_setup(self)
         self.__CommonSetup1_1.send_tr1_RA()
+        self.__CommonSetup1_1.send_dhcp_advertise()
+        self.__CommonSetup1_1.send_dhcp_reply()
         time.sleep(100000000)
         self.__packet_sniffer_wan.start()
         logging.info(self.__test_desc)

@@ -92,26 +92,44 @@ class CommonTestSetup1_1:
 
     def udp(self):
         return UDP()
-    
+
+    def dhcp_reply(self):
+        return DHCP6_Reply()
+
     def dhcp_advertise(self):
         return DHCP6_Advertise()
     
     def opt_ia_na(self):
-        return DHCP6OptIA_NA()
-    
-    def opt_ia_pd(self):
         # optcode    : ShortEnumField                      = (25)
         # optlen     : FieldLenField                       = (None)
         # iaid       : XIntField                           = (None)
         # T1         : IntField                            = (None)
         # T2         : IntField                            = (None)
         # iapdopt    : PacketListField                     = ([])
-        return DHCP6OptIA_PD(iaid = self.__config.get('setup1-1_advertise','iaid'),\
-                            T1 = self.__config.get('setup1-1_advertise','t1'),\
-                            T2 = self.__config.get('setup1-1_advertise','t2'),\
-                            iapdopt=DHCP6OptIAAddress(addr=self.__config.get('setup1-1_advertise','ia_pd_address'),\
-                                                        preflft=self.__config.get('setup1-1_advertise','ia_pd_pref_lifetime'),\
-                                                        validlft=self.__config.get('setup1-1_advertise','ia_pd_validtime')))
+        return DHCP6OptIA_NA(iaid = int(self.__config.get('setup1-1_advertise','iaid'),16),\
+                            T1 = int(self.__config.get('setup1-1_advertise','t1')),\
+                            T2 = int(self.__config.get('setup1-1_advertise','t2')),\
+                            ianaopts=DHCP6OptIAAddress(addr=self.__config.get('setup1-1_advertise','ia_na_address'),\
+                                                        preflft=int(self.__config.get('setup1-1_advertise','ia_na_pref_lifetime')),\
+                                                        validlft=int(self.__config.get('setup1-1_advertise','ia_na_validtime'))))
+    
+    def opt_ia_pd(self):
+
+
+#         optcode    : ShortEnumField                      = (26)
+# optlen     : FieldLenField                       = (None)
+# preflft    : IntEnumField                        = (0)
+# validlft   : IntEnumField                        = (0)
+# plen       : ByteField                           = (48)
+# prefix     : IP6Field                            = ('2001:db8::')
+# iaprefopts : PacketListField                     = ([])
+        return DHCP6OptIA_PD(iaid =int(self.__config.get('setup1-1_advertise','iaid'),16),\
+                            T1 = int(self.__config.get('setup1-1_advertise','t1')),\
+                            T2 = int(self.__config.get('setup1-1_advertise','t2')),\
+                            iapdopt=DHCP6OptIAPrefix(prefix = self.__config.get('setup1-1_advertise','ia_pd_address'),\
+                                                        preflft = int(self.__config.get('setup1-1_advertise','ia_pd_pref_lifetime')),\
+                                                        validlft = int(self.__config.get('setup1-1_advertise','ia_pd_validtime')),\
+                                                        plen= int(self.__config.get('setup1-1_advertise','ia_pd_pref_len'))))
 
     def opt_dns_server(self):
         return DHCP6OptDNSServers(dnsservers=[self.__config.get('setup1-1_advertise','dns_rec_name_server')])
@@ -138,16 +156,29 @@ class CommonTestSetup1_1:
             self.ipv6()/\
             self.icmpv6_ra()/\
             self.icmpv6_pd(),\
-            iface=self.__wan_device_tr1,inter='1')
+            iface=self.__wan_device_tr1,inter=1)
 
     def send_dhcp_advertise(self):
         #sendp(Ether()/IPv6()/UDP()/DHCP6_Advertise()/DHCP6OptClientId()/DHCP6OptServerId()/DHCP6OptIA_NA()/DHCP6OptIA_PD()/DHCP6OptDNSServers()/DHCP6OptDNSDomains(),iface='lo')
         sendp(self.ether()/\
             self.ipv6()/\
             self.udp()/\
-            self.dhcp_advertise/\
-            self.opt_ia_na/\
-            self.opt_ia_pd/\
-            self.opt_dns_server/\
-            self.opt_dns_domain,\
-            iface=self.__wan_device_tr1,inter='1')
+            self.dhcp_advertise()/\
+            self.opt_ia_na()/\
+            self.opt_ia_pd()/\
+            self.opt_dns_server()/\
+            self.opt_dns_domain(),\
+            iface=self.__wan_device_tr1,inter=1)
+
+    def send_dhcp_reply(self):
+        #sendp(Ether()/IPv6()/UDP()/DHCP6_Advertise()/DHCP6OptClientId()/DHCP6OptServerId()/DHCP6OptIA_NA()/DHCP6OptIA_PD()/DHCP6OptDNSServers()/DHCP6OptDNSDomains(),iface='lo')
+        sendp(self.ether()/\
+            self.ipv6()/\
+            self.udp()/\
+            self.dhcp_reply()/\
+            self.opt_ia_na()/\
+            self.opt_ia_pd()/\
+            self.opt_dns_server()/\
+            self.opt_dns_domain(),\
+            iface=self.__wan_device_tr1,inter=1)
+            
