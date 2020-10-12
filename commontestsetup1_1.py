@@ -48,6 +48,7 @@ class CommonTestSetup1_1:
         self.__validlifetime = 600
         self.__preferredlifetime = 600
         self.__interval = 1
+        self.__routerlifetime =200
         self.__wan_device_tr1 = self.__config.get('wan','device_wan_tr1')
         self.__wan_mac_tr1 = self.__config.get('wan','wan_mac_tr1')
         self.__link_local_addr = self.__config.get('wan','link_local_addr')
@@ -69,20 +70,28 @@ class CommonTestSetup1_1:
         self.__intervalo = test_flags.get_interval()
 #sendp(Ether()/IPv6()/UDP()/DHCP6_Advertise()/DHCP6OptClientId()/DHCP6OptServerId()/DHCP6OptIA_NA()/DHCP6OptIA_PD()/DHCP6OptDNSServers()/DHCP6OptDNSDomains(),iface='lo')
 # TR1 transmits a Router Advertisement to the all-nodes multicast address with the M and O Flag
-    def ether(self):
-        return Ether(src=self.__wan_mac_tr1)
+    def ether(self,test=None):
+        print('etheraddres')
+        print (test.get_ether_dst())
+        return Ether(src= test.get_ether_src() if test else self.__wan_mac_tr1,\
+                dst = test.get_ether_dst() if test else None)
 
-    def ipv6(self):
-        return IPv6(src=self.__link_local_addr,\
-                      dst=self.__all_nodes_addr)
+    def ipv6(self,test=None):
+        print('ipv6addres')
+        print (test.get_ipv6_dst())
+        return IPv6(src=test.get_ipv6_src() if test else self.__link_local_addr,\
+                    dst= test.get_ipv6_dst() if test else self.__all_nodes_addr)
+                    #dst = self.__config.get('setup1-1_advertise','ipv6_addr'))
+                    #
+                      
     
-    def icmpv6_ra(self):
+    def icmpv6_ra(self,test=None):
         return ICMPv6ND_RA(M=self.__flag_M,\
                             O=self.__flag_O,\
                             routerlifetime=self.__routerlifetime,\
                             chlim=self.__flag_chlim)
 
-    def icmpv6_pd(self):
+    def icmpv6_pd(self,Test=None):
         return ICMPv6NDOptPrefixInfo(L=self.__flag_L,\
                                         A=self.__flag_A,\
                                         R=self.__flag_R,\
@@ -93,8 +102,6 @@ class CommonTestSetup1_1:
     def udp(self):
         return UDP()
 
-    def dhcp_reply(self):
-        return DHCP6_Reply()
 
     def dhcp_advertise(self):
         return DHCP6_Advertise()
@@ -138,7 +145,15 @@ class CommonTestSetup1_1:
         #dnsdomains : DomainNameListField                 = ([])
         return DHCP6OptDNSDomains(dnsdomains=[self.__config.get('setup1-1_advertise','domain_search')])
 
-    def send_tr1_RA(self):
+    def dhcp_reply(self):
+        return DHCP6_Reply()
+
+    def echo_request(self):
+        return ICMPv6EchoRequest()
+
+
+
+    def send_tr1_RA(self,fields=None):
         # tr1_et = Ether(src=self.__wan_mac_tr1)
         # tr1_ip = IPv6(src=self.__link_local_addr,\
         #               dst=self.__all_nodes_addr)
@@ -152,16 +167,16 @@ class CommonTestSetup1_1:
         #                                 validlifetime=self.__validlifetime,\
         #                                 preferredlifetime=self.__preferredlifetime,\
         #                                 prefix=self.__global_addr)
-        sendp(self.ether()/\
-            self.ipv6()/\
-            self.icmpv6_ra()/\
-            self.icmpv6_pd(),\
+        sendp(self.ether(fields)/\
+            self.ipv6(fields)/\
+            self.icmpv6_ra(fields)/\
+            self.icmpv6_pd(fields),\
             iface=self.__wan_device_tr1,inter=1)
 
-    def send_dhcp_advertise(self):
+    def send_dhcp_advertise(self,fields=None):
         #sendp(Ether()/IPv6()/UDP()/DHCP6_Advertise()/DHCP6OptClientId()/DHCP6OptServerId()/DHCP6OptIA_NA()/DHCP6OptIA_PD()/DHCP6OptDNSServers()/DHCP6OptDNSDomains(),iface='lo')
-        sendp(self.ether()/\
-            self.ipv6()/\
+        sendp(self.ether(fields)/\
+            self.ipv6(fields)/\
             self.udp()/\
             self.dhcp_advertise()/\
             self.opt_ia_na()/\
@@ -170,10 +185,10 @@ class CommonTestSetup1_1:
             self.opt_dns_domain(),\
             iface=self.__wan_device_tr1,inter=1)
 
-    def send_dhcp_reply(self):
+    def send_dhcp_reply(self,fields=None):
         #sendp(Ether()/IPv6()/UDP()/DHCP6_Advertise()/DHCP6OptClientId()/DHCP6OptServerId()/DHCP6OptIA_NA()/DHCP6OptIA_PD()/DHCP6OptDNSServers()/DHCP6OptDNSDomains(),iface='lo')
-        sendp(self.ether()/\
-            self.ipv6()/\
+        sendp(self.ether(fields)/\
+            self.ipv6(fields)/\
             self.udp()/\
             self.dhcp_reply()/\
             self.opt_ia_na()/\
@@ -181,4 +196,11 @@ class CommonTestSetup1_1:
             self.opt_dns_server()/\
             self.opt_dns_domain(),\
             iface=self.__wan_device_tr1,inter=1)
+
+    def send_echo_request(self,fields=None,contador=None):
+        sendp(self.ether(fields)/\
+            self.ipv6(fields)/\
+            self.echo_request(),\
+            iface=self.__wan_device_tr1,count=contador,inter=1)
+            
             

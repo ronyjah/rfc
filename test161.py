@@ -55,7 +55,7 @@ class Test161:
     def run(self):
         #self.__packet_sniffer.c()
         logging.info('Passo1-create Packet sniffer')
-        self.__packet_sniffer = PacketSniffer('test161',self.__queue,self,self.__config)
+        self.__packet_sniffer = PacketSniffer('test161',self.__queue,self,self.__config,self.__config.get('lan','lan_device'))
         #logging.info('Passo2 - Init')       
         #self.__packet_sniffer.init()
         logging.info('Passo3 - Start')

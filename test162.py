@@ -49,6 +49,14 @@ class Test162:
         self.__preferredlifetime = None
         self.__interval = None
         self.__routerlifetime = None
+        self.__ipv6_dst =None
+        self.__ipv6_src = None
+        self.__ether_src = None
+        self.__ether_dst = None
+        self.__ND_local_OK = False
+        self.__setup1_1_OK = False
+        self.__local_ping_OK = False
+        self.__local_addr_ceRouter =None
         self.__CommonSetup1_1 = CommonTestSetup1_1(self.__config)
         self.__wan_device_tr1 = self.__config.get('wan','device_wan_tr1')
         self.__wan_mac_tr1 = self.__config.get('wan','wan_mac_tr1')
@@ -139,27 +147,113 @@ class Test162:
 
     def get_routerlifetime(self):
         return int(self.__routerlifetime)
+    
+    def set_ipv6_dst(self, valor):
+        self.__ipv6_dst = valor
+
+    def get_ipv6_dst(self):
+        return self.__ipv6_dst
+
+    def set_ipv6_src(self, valor):
+        self.__ipv6_src = valor
+
+    def get_ipv6_src(self):
+        return self.__ipv6_src
+
+    def set_ether_dst(self, valor):
+        self.__ether_dst = valor
+
+    def get_ether_dst(self):
+        return self.__ether_dst
+
+    def set_ether_src(self, valor):
+        self.__ether_src = valor
+
+    def get_ether_src(self):
+        return self.__ether_src
+    
+    def set_local_addr_ceRouter(self,valor):
+        self.__local_addr_ceRouter = valor
+
+    def get_local_addr_ceRouter(self):
+        return self.__local_addr_ceRouter
+
+
+    def setup1_1(self,pkt):
+        
+        if pkt.haslayer(ICMPv6ND_RS):
+            logging.info('RS')
+
+            self.set_ether_dst(self.__config.get('multicast','all_mac_nodes'))
+            self.set_ipv6_src(self.__config.get('wan','ra_address'))
+            self.set_ipv6_dst(self.__config.get('multicast','all_nodes_addr'))
+
+            self.__CommonSetup1_1.send_tr1_RA(self)
+        
+        if pkt.haslayer(ICMPv6ND_NS):
+            self.set_ether_dst(pkt[Ether].src)
+            if pkt[ICMPv6ND_NS].tgt:
+                self.set_local_addr_ceRouter(pkt[ICMPv6ND_NS].tgt)
+                self.__ND_local_OK = True
+
+        if pkt.haslayer(DHCP6_Solicit):
+            self.__CommonSetup1_1.send_dhcp_advertise(self)
+
+        if pkt.haslayer(DHCP6_Request):
+            self.__CommonSetup1_1.send_dhcp_reply(self)
+
+        #1 sned ping test
+        if self.__ND_local_OK and not self.__local_ping_OK:
+            self.set_ipv6_src(self.__config.get('wan','link_local_addr'))
+            self.set_ipv6_dst(self.get_local_addr_ceRouter())
+            self.set_ether_src(self.__config.get('wan','link_local_mac'))
+            self.set_ether_dst(self.get_ether_dst())
+            self.__CommonSetup1_1.send_echo_request(self)
+
+        if pkt.haslayer(ICMPv6EchoReply):
+            print('DESTINO IPv6:' + pkt[IPv6].dst)
+            if pkt[IPv6].dst == self.__config.get('wan','link_local_addr'):
+                self.__local_ping_OK = True
 
     def run(self):
-        #self.__packet_sniffer_wan = PacketSniffer('test162',self.__queue_wan,self,self.__config)
+        self.__packet_sniffer_wan = PacketSniffer('test162',self.__queue_wan,self,self.__config,self.__wan_device_tr1)
         #self.__packet_sniffer.init()
         self.flags_partA()
         self.__CommonSetup1_1.set_flags_common_setup(self)
-        self.__CommonSetup1_1.send_tr1_RA()
-        self.__CommonSetup1_1.send_dhcp_advertise()
-        self.__CommonSetup1_1.send_dhcp_reply()
-        time.sleep(100000000)
+        #self.__CommonSetup1_1.send_tr1_RA()
+        #self.__CommonSetup1_1.send_dhcp_advertise()
+        #self.__CommonSetup1_1.send_dhcp_reply()
+        #self.__CommonSetup1_1.send_echo_request()
+        #self.set_ipv6_dst('ff:ff::1')
+        #self.__config.set('setup1-1_advertise','ipv6_addr','ff:ff::1')
+        #self.__CommonSetup1_1.ipv6()
+        #self.__CommonSetup1_1.send_tr1_RA(self)
+        #time.sleep(100000000)
+        
+
         self.__packet_sniffer_wan.start()
+        logging.info('Task Desc')
         logging.info(self.__test_desc)
+        logging.info('Qsize')
         logging.info(self.__queue_wan.qsize())
         while not self.__queue_wan.full():
+
             pkt = self.__queue_wan.get()
-            if pkt.haslayer(ICMPv6ND_RS):
-                self.__ceRouter_mac_addr=pkt[Ether].src
-                self.__CommonSetup1_1.send_tr1_RA()
-                self.send_icmpv6_ra(pkt)
-                time.sleep(1)
-                break
+            if not self.__setup1_1_OK:
+                logging.info('self.__queue_size')
+                logging.info(self.__queue_wan.qsize())
+                self.setup1_1(pkt)
+            #time.sleep(10000000)
+            # if pkt.haslayer(ICMPv6ND_RA):
+            #     self.set_ipv6_dst(pkt[IPv6].src)
+            #     self.set_ether_dst(pkt[Ether].src)
+                #self.__CommonSetup1_1.ipv6(self)
+                #self.__ceRouter_mac_addr=pkt[Ether].src
+                #self.__CommonSetup1_1.send_tr1_RA(self)
+                # self.__CommonSetup1_1.send_echo_request(self)
+                #self.send_icmpv6_ra(pkt)
+            #time.sleep(1)
+                #break
                 #self.__valid = True
             #elif pkt.haslayer(ICMPv6ND_RA) and self.__valid == False:
                 #print('theardoffFalse')
@@ -171,6 +265,7 @@ class Test162:
                 #self.turn_off_thread()
              #   return True
         while not self.__queue_wan.empty():
+            print('RS1')
             pkt = self.__queue_wan.get()       
         logging.info('Passo4-t162run_sttop-theard success')
         logging.info('self.__queue_size_fim')

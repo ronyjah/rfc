@@ -61,5 +61,5 @@ class CeRouter(Profile):
         logging.info('ONT: profile activating')
         #self.configure_interfaces()
         #self.wait_lan_connect()
-        self.add_step(Test161(self.__config))
+        #self.add_step(Test161(self.__config))
         self.add_step(Test162(self.__config))

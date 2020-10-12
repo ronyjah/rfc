@@ -15,14 +15,14 @@ logging.basicConfig(format=format, level=logging.DEBUG,
                     datefmt="%H:%M:%S")
 
 class PacketSniffer(Thread):
-    def __init__(self,name,pass_queue,test,config):
+    def __init__(self,name,pass_queue,test,config,device):
         super(PacketSniffer,self).__init__()
         logging.info('Packet sniffer started')
         self.queue=pass_queue
         self.device_dict={}
         self.not_an_ap={}
         self.__test = test
-        self.__interface = config.get('lan','lan_device')
+        self.__interface = device
         self.__AsySnif = AsyncSniffer(iface=self.__interface,prn=self.PacketHandler)
         #sniff(iface=self.__interface,prn=self.PacketHandler)
 
