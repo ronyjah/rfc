@@ -97,6 +97,18 @@ class Test162:
         self.__routerlifetime = self.__config.get('t1.6.2_flags_part_a','routerlifetime')
         self.__intervalo = self.__config.get('t1.6.2_flags_part_a','intervalo')
 
+    def flags_partB(self):
+        self.__flag_M = self.__config.get('t1.6.2_flags_part_b','flag_m')
+        self.__flag_O = self.__config.get('t1.6.2_flags_part_b','flag_o')
+        self.__flag_chlim = self.__config.get('t1.6.2_flags_part_b','flag_chlim')
+        self.__flag_L = self.__config.get('t1.6.2_flags_part_b','flag_l')
+        self.__flag_A = self.__config.get('t1.6.2_flags_part_b','flag_a')
+        self.__flag_R = self.__config.get('t1.6.2_flags_part_b','flag_r')
+        self.__validlifetime = self.__config.get('t1.6.2_flags_part_b','validlifetime')
+        self.__preferredlifetime = self.__config.get('t1.6.2_flags_part_b','preferredlifetime')
+        self.__routerlifetime = self.__config.get('t1.6.2_flags_part_b','routerlifetime')
+        self.__intervalo = self.__config.get('t1.6.2_flags_part_b','intervalo')
+
 
     def get_flag_M(self):
         return int(self.__flag_M)
@@ -142,6 +154,7 @@ class Test162:
             pkt = self.__queue_wan.get()
             if pkt.haslayer(ICMPv6ND_RS):
                 self.__ceRouter_mac_addr=pkt[Ether].src
+                self.__CommonSetup1_1.send_tr1_RA()
                 self.send_icmpv6_ra(pkt)
                 time.sleep(1)
                 break

@@ -53,7 +53,7 @@ class CommonTestSetup1_1:
         self.__link_local_addr = self.__config.get('wan','link_local_addr')
         self.__all_nodes_addr = self.__config.get('multicast','all_nodes_addr')
         self.__global_addr = self.__config.get('wan','global_addr')
-        self.__test_desc = self.__config.get('tests','1.6.2')
+        self.__test_desc = self.__config.get('tests','common1-1')
 
 
     def set_flags_common_setup(self,test_flags):
@@ -67,20 +67,75 @@ class CommonTestSetup1_1:
         self.__preferredlifetime = test_flags.get_preferredlifetime()
         self.__routerlifetime = test_flags.get_routerlifetime()
         self.__intervalo = test_flags.get_interval()
-
+#sendp(Ether()/IPv6()/UDP()/DHCP6_Advertise()/DHCP6OptClientId()/DHCP6OptServerId()/DHCP6OptIA_NA()/DHCP6OptIA_PD()/DHCP6OptDNSServers()/DHCP6OptDNSDomains(),iface='lo')
 # TR1 transmits a Router Advertisement to the all-nodes multicast address with the M and O Flag
-    def send_tr1_RA(self):
-        tr1_et = Ether(src=self.__wan_mac_tr1)
-        tr1_ip = IPv6(src=self.__link_local_addr,\
+    def ether(self):
+        return Ether(src=self.__wan_mac_tr1)
+
+    def ipv6(self):
+        return IPv6(src=self.__link_local_addr,\
                       dst=self.__all_nodes_addr)
-        tr1_rs = ICMPv6ND_RA(M=self.__flag_M,\
+    
+    def icmpv6_ra(self):
+        return ICMPv6ND_RA(M=self.__flag_M,\
                             O=self.__flag_O,\
                             routerlifetime=self.__routerlifetime,\
                             chlim=self.__flag_chlim)
-        tr1_pd = ICMPv6NDOptPrefixInfo(L=self.__flag_L,\
+
+    def icmpv6_pd(self):
+        return ICMPv6NDOptPrefixInfo(L=self.__flag_L,\
                                         A=self.__flag_A,\
                                         R=self.__flag_R,\
                                         validlifetime=self.__validlifetime,\
                                         preferredlifetime=self.__preferredlifetime,\
                                         prefix=self.__global_addr)
-        sendp(tr1_et/tr1_ip/tr1_rs/tr1_pd,iface=self.__wan_device_tr1)
+
+    def udp(self):
+        return UDP()
+    
+    def dhcp_advertise(self):
+        return DHCP6_Advertise()
+    
+    def opt_ia_na(self):
+        return DHCP6OptIA_NA()
+    
+    def opt_ia_pd(self):
+        return DHCP6OptIA_PD()
+
+    def opt_dns_server(self):
+        return DHCP6OptDNSServers()
+
+    def opt_dns_domain(self):
+        return DHCP6OptDNSDomains()
+
+    def send_tr1_RA(self):
+        # tr1_et = Ether(src=self.__wan_mac_tr1)
+        # tr1_ip = IPv6(src=self.__link_local_addr,\
+        #               dst=self.__all_nodes_addr)
+        # tr1_rs = ICMPv6ND_RA(M=self.__flag_M,\
+        #                     O=self.__flag_O,\
+        #                     routerlifetime=self.__routerlifetime,\
+        #                     chlim=self.__flag_chlim)
+        # tr1_pd = ICMPv6NDOptPrefixInfo(L=self.__flag_L,\
+        #                                 A=self.__flag_A,\
+        #                                 R=self.__flag_R,\
+        #                                 validlifetime=self.__validlifetime,\
+        #                                 preferredlifetime=self.__preferredlifetime,\
+        #                                 prefix=self.__global_addr)
+        sendp(self.ether()/\
+            self.ipv6()/\
+            self.icmpv6_ra()/\
+            self.icmpv6_pd(),\
+            iface=self.__wan_device_tr1,inter='1')
+
+    def send_dhcp_advertise(self):
+        #sendp(Ether()/IPv6()/UDP()/DHCP6_Advertise()/DHCP6OptClientId()/DHCP6OptServerId()/DHCP6OptIA_NA()/DHCP6OptIA_PD()/DHCP6OptDNSServers()/DHCP6OptDNSDomains(),iface='lo')
+        sendp(self.ether()/\
+            self.ipv6()/\
+            self.udp()/\
+            self.dhcp_advertise/\
+            self.opt_ia_na/\
+            self.opt_ia_pd/\
+            self.opt_dns_server/\
+            self.opt_dns_domain,\
+            iface=self.__wan_device_tr1,inter='1')
