@@ -55,6 +55,7 @@ class Test162b:
         self.__ether_dst = None
         self.__xid = None
         self.__duid = None
+        self.__dhcp_reconf_type = None
         self.__ND_local_OK = False
         self.__setup1_1_OK = False
         self.__local_ping_OK = False
@@ -66,7 +67,7 @@ class Test162b:
         self.__wan_mac_tr1 = self.__config.get('wan','wan_mac_tr1')
         self.__link_local_addr = self.__config.get('wan','link_local_addr')
         self.__all_nodes_addr = self.__config.get('multicast','all_nodes_addr')
-        self.__test_desc = self.__config.get('tests','1.6.2')
+        self.__test_desc = self.__config.get('tests','1.6.3b')
         
         #self.__packet_sniffer.daemon=True
         
@@ -200,6 +201,12 @@ class Test162b:
     def get_duid(self):
         return self.__duid
 
+    def get_dhcp_reconf_type(self):
+        return self.__dhcp_reconf_type
+
+    def set_dhcp_reconf_type(self,valor):
+        self.__dhcp_reconf_type = valor
+
     def setup1_1(self,pkt):
         
         if pkt.haslayer(ICMPv6ND_RS):
@@ -245,14 +252,13 @@ class Test162b:
             self.__CommonSetup1_1.send_icmp_ns(self)
             self.__global_ns_ok = True
 
-          
-
         #1 sned ping test
         if self.__ND_local_OK and not self.__local_ping_OK:
             self.set_ipv6_src(self.__config.get('wan','link_local_addr'))
             self.set_ipv6_dst(self.get_local_addr_ceRouter())
             self.set_ether_src(self.__config.get('wan','link_local_mac'))
             self.set_ether_dst(self.get_ether_dst())
+            self.set_dhcp_reconf_type(self.__config.get('wan','link_local_mac'))
             self.__CommonSetup1_1.send_echo_request(self)
             self.__local_ping_OK = True
 
@@ -287,24 +293,23 @@ class Test162b:
 
             pkt = self.__queue_wan.get()
             if not self.__setup1_1_OK:
-                if pkt.haslayer(DHCP6_Solicit):
-                    return True
                 logging.info('self.__queue_size')
                 logging.info(self.__queue_wan.qsize())
                 self.setup1_1(pkt)
 
-            # elif not self.__approved:
-            #     self.set_ipv6_src(self.__config.get('wan','global_wan_addr'))
-            #     self.set_ipv6_dst(self.__config.get('setup1-1_advertise','ia_na_address'))
-            #     self.set_ether_src(self.__config.get('wan','link_local_mac'))
-            #     self.set_ether_dst(self.get_ether_dst())
-            #     self.__CommonSetup1_1.send_echo_request(self)
-            #     if pkt.haslayer(ICMPv6EchoReply):
-            #         mac_dst = pkt[Ether].dst
-            #         if mac_dst == self.__config.get('wan','ra_mac'):
-            #             return True
-            #         else:
-            #             return False
+            elif not self.__approved:
+                self.set_ipv6_src(self.__config.get('wan','global_wan_addr'))
+                self.set_ipv6_dst(self.__config.get('setup1-1_advertise','ia_na_address'))
+                self.set_ether_src(self.__config.get('wan','link_local_mac'))
+                self.set_ether_dst(self.get_ether_dst())
+                self.set_dhcp_reconf_type(self.__config.get('t1.6.3','msg_type'))
+                self.__CommonSetup1_1.send_dhcp_reconfigure(self)
+                if pkt.haslayer(ICMPv6EchoReply):
+                    mac_dst = pkt[Ether].dst
+                    if mac_dst == self.__config.get('wan','ra_mac'):
+                        return True
+                    else:
+                        return False
             #time.sleep(10000000)
             # if pkt.haslayer(ICMPv6ND_RA):
             #     self.set_ipv6_dst(pkt[IPv6].src)

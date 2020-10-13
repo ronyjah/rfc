@@ -54,19 +54,21 @@ class Test162a:
         self.__ether_src = None
         self.__ether_dst = None
         self.__xid = None
-        self.__duid = None
+        self.__server_duid = None
+        self.__client_duid = None
         self.__ND_local_OK = False
         self.__setup1_1_OK = False
         self.__local_ping_OK = False
         self.__global_ns_ok = False
         self.__dhcp_ok = False
+        self.__iaid = None
         self.__local_addr_ceRouter =None
         self.__CommonSetup1_1 = CommonTestSetup1_1(self.__config)
         self.__wan_device_tr1 = self.__config.get('wan','device_wan_tr1')
         self.__wan_mac_tr1 = self.__config.get('wan','wan_mac_tr1')
         self.__link_local_addr = self.__config.get('wan','link_local_addr')
         self.__all_nodes_addr = self.__config.get('multicast','all_nodes_addr')
-        self.__test_desc = self.__config.get('tests','1.6.2')
+        self.__test_desc = self.__config.get('tests','1.6.2a')
         
         #self.__packet_sniffer.daemon=True
         
@@ -194,11 +196,23 @@ class Test162a:
     def get_xid(self):
         return self.__xid
 
-    def set_duid(self,valor):
-        self.__duid = valor
+    def set_client_duid(self,valor):
+        self.__client_duid = valor
 
-    def get_duid(self):
-        return self.__duid
+    def get_client_duid(self):
+        return self.__client_duid
+
+    def set_server_duid(self,valor):
+        self.__server_duid = valor
+
+    def get_server_duid(self):
+        return self.__server_duid
+
+    def set_iaid(self,valor):
+        self.__iaid = valor
+
+    def get_iaid(self,valor):
+        return self.__iaid
 
     def setup1_1(self,pkt):
         
@@ -220,7 +234,9 @@ class Test162a:
 
         if pkt.haslayer(DHCP6_Solicit):
             self.set_xid(pkt[DHCP6_Solicit].trid)
-            self.set_duid(pkt[DHCP6OptClientId].duid)
+            self.set_client_duid(pkt[DHCP6OptClientId].duid)
+            self.set_server_duid(self.__config.get('setup1-1_advertise','server_duid'))
+            self.set_iaid(pkt[DHCP6OptIA_NA].iaid)
             self.set_ether_src(self.__config.get('wan','link_local_mac'))
             self.set_ether_dst(self.get_ether_dst())
             self.set_ipv6_dst(self.get_local_addr_ceRouter())

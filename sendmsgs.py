@@ -23,7 +23,7 @@ format = "%(asctime)s: %(message)s"
 logging.basicConfig(format=format, level=logging.DEBUG,
                     datefmt="%H:%M:%S")
 
-class CommonTestSetup1_1:
+class SendMsgs:
 
     def __init__(self,config):
         #self.self_testing = self
@@ -156,7 +156,7 @@ class CommonTestSetup1_1:
         #dnsdomains : DomainNameListField                 = ([])
         return DHCP6OptDNSDomains(dnsdomains=[self.__config.get('setup1-1_advertise','domain_search')])
 
-    def dhcp_reply(self):
+    def dhcp_reply(self,test=None):
         return DHCP6_Reply()
 
     def echo_request(self):
@@ -204,7 +204,7 @@ class CommonTestSetup1_1:
         sendp(self.ether(fields)/\
             self.ipv6(fields)/\
             self.udp()/\
-            self.dhcp_advertise()/\
+            self.dhcp_advertise(fields)/\
             self.dhcp_client_id(fields)/\
             self.dhcp_server_id(fields)/\
             self.opt_ia_na(fields)/\

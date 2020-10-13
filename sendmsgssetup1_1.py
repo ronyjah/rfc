@@ -23,7 +23,7 @@ format = "%(asctime)s: %(message)s"
 logging.basicConfig(format=format, level=logging.DEBUG,
                     datefmt="%H:%M:%S")
 
-class CommonTestSetup1_1:
+class SendMsgsSetup1_1:
 
     def __init__(self,config):
         #self.self_testing = self

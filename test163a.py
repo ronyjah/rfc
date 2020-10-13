@@ -66,7 +66,7 @@ class Test162b:
         self.__wan_mac_tr1 = self.__config.get('wan','wan_mac_tr1')
         self.__link_local_addr = self.__config.get('wan','link_local_addr')
         self.__all_nodes_addr = self.__config.get('multicast','all_nodes_addr')
-        self.__test_desc = self.__config.get('tests','1.6.2')
+        self.__test_desc = self.__config.get('tests','1.6.3a')
         
         #self.__packet_sniffer.daemon=True
         
