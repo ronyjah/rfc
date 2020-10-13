@@ -99,13 +99,18 @@ class CommonTestSetup1_1:
                                         preferredlifetime=self.__preferredlifetime,\
                                         prefix=self.__global_addr)
 
+    def icmpv6_ns(self,test=None):
+        return ICMPv6ND_NS(tgt=test.get_tgt())
+
     def udp(self):
         return UDP()
 
 
-    def dhcp_advertise(self):
-        return DHCP6_Advertise()
+    def dhcp_advertise(self,test=None):
+        return DHCP6_Advertise(trid=test.get_xid())
     
+    def dhcp_client_id(self,test=None):
+        return DHCP6OptClientId(duid=test.get_duid())
     def opt_ia_na(self):
         # optcode    : ShortEnumField                      = (25)
         # optlen     : FieldLenField                       = (None)
@@ -179,6 +184,7 @@ class CommonTestSetup1_1:
             self.ipv6(fields)/\
             self.udp()/\
             self.dhcp_advertise()/\
+            self.dhcp_client_id()/\
             self.opt_ia_na()/\
             self.opt_ia_pd()/\
             self.opt_dns_server()/\
@@ -203,4 +209,8 @@ class CommonTestSetup1_1:
             self.echo_request(),\
             iface=self.__wan_device_tr1,count=contador,inter=1)
             
-            
+    def send_icmp_ns(self,fields=None,contador=None):
+        sendp(self.ether(fields)/\
+            self.ipv6(fields)/\
+            self.icmpv6_ns(fields),\
+            iface=self.__wan_device_tr1,inter=1)

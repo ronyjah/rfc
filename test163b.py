@@ -24,7 +24,7 @@ logging.basicConfig(format=format, level=logging.DEBUG,
                     datefmt="%H:%M:%S")
 
 
-class Test162a:
+class Test162b:
 
     def __init__(self,config):
         self.__queue_wan = Queue()
@@ -265,7 +265,7 @@ class Test162a:
     def run(self):
         self.__packet_sniffer_wan = PacketSniffer('test162',self.__queue_wan,self,self.__config,self.__wan_device_tr1)
         #self.__packet_sniffer.init()
-        self.flags_partA()
+        self.flags_partB()
         self.__CommonSetup1_1.set_flags_common_setup(self)
         #self.__CommonSetup1_1.send_tr1_RA()
         #self.__CommonSetup1_1.send_dhcp_advertise()
@@ -277,7 +277,7 @@ class Test162a:
         #self.__CommonSetup1_1.send_tr1_RA(self)
         #time.sleep(100000000)
         
-
+        
         self.__packet_sniffer_wan.start()
         logging.info('Task Desc')
         logging.info(self.__test_desc)
@@ -287,22 +287,24 @@ class Test162a:
 
             pkt = self.__queue_wan.get()
             if not self.__setup1_1_OK:
+                if pkt.haslayer(DHCP6_Solicit):
+                    return True
                 logging.info('self.__queue_size')
                 logging.info(self.__queue_wan.qsize())
                 self.setup1_1(pkt)
 
-            elif not self.__approved:
-                self.set_ipv6_src(self.__config.get('wan','global_wan_addr'))
-                self.set_ipv6_dst(self.__config.get('setup1-1_advertise','ia_na_address'))
-                self.set_ether_src(self.__config.get('wan','link_local_mac'))
-                self.set_ether_dst(self.get_ether_dst())
-                self.__CommonSetup1_1.send_echo_request(self)
-                if pkt.haslayer(ICMPv6EchoReply):
-                    mac_dst = pkt[Ether].dst
-                    if mac_dst == self.__config.get('wan','link_local_mac'):
-                        return True
-                    else:
-                        return False
+            # elif not self.__approved:
+            #     self.set_ipv6_src(self.__config.get('wan','global_wan_addr'))
+            #     self.set_ipv6_dst(self.__config.get('setup1-1_advertise','ia_na_address'))
+            #     self.set_ether_src(self.__config.get('wan','link_local_mac'))
+            #     self.set_ether_dst(self.get_ether_dst())
+            #     self.__CommonSetup1_1.send_echo_request(self)
+            #     if pkt.haslayer(ICMPv6EchoReply):
+            #         mac_dst = pkt[Ether].dst
+            #         if mac_dst == self.__config.get('wan','ra_mac'):
+            #             return True
+            #         else:
+            #             return False
             #time.sleep(10000000)
             # if pkt.haslayer(ICMPv6ND_RA):
             #     self.set_ipv6_dst(pkt[IPv6].src)
