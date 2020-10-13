@@ -24,7 +24,7 @@ logging.basicConfig(format=format, level=logging.DEBUG,
                     datefmt="%H:%M:%S")
 
 
-class Test162b:
+class Test163b:
 
     def __init__(self,config):
         self.__queue_wan = Queue()

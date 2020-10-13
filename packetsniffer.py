@@ -34,7 +34,7 @@ class PacketSniffer(Thread):
         #self.__AsySnif.start()#
 
     def init(self):
-        logging.info('AsyncSniffer start!!!!!!!!!!!!!!!!!!!!!!!!')
+        logging.info('AsyncSniffer start')
         self.__AsySnif.start()
     def stop(self):
         logging.info('AsyncSniffer stop')
@@ -56,37 +56,8 @@ class PacketSniffer(Thread):
         return self.queue.get()
 
     def PacketHandler(self,pkt):
-        logging.info('PacketHandler - incoming packeage')
-        print (threading.currentThread().getName(), 'PacketHandler info in thread message')
-        #print('OLA MUNDO')
-        #if pkt.haslayer(ICMP):
-        self.put_queue(pkt)
-            #print(pkt.src)
-#            self.__test.set_aprovado(1)
-        #   sig_str = -(256-ord(pkt.notdecoded[-4:-3]))
-        #   mac_addr=""
-        #   ssid=""
-        # try:
-        #     pass
-        #     #print('handler')
-        #     # mac_addr=pkt.addr2
-        #     # ssid=pkt.info
-        # except:
-        #     return
-        # # if self.device_dict.has_key(pkt.addr2) and pkt.info!=self.device_dict[pkt.addr2]:
-        #     output= "DIS MAC:%s RSSI:%s " %(pkt.addr2,sig_str)
-        #     print (output)
-        #     self.device_dict.pop(pkt.addr2)
-        #     self.not_an_ap[pkt.addr2]=pkt.info
-        #     self.queue.put(output)
-        # elif pkt.info=="" or pkt.info=="Broadcast":
-        #     output= "DIS MAC:%s RSSI:%s " %(pkt.addr2,sig_str)
-        #     print (output)
-        #     self.queue.put(output)
-        # else:
-        #     pot_mac=self.not_an_ap.get(pkt.addr2)
-        #     if pot_mac == None:
-        #         self.device_dict[pkt.addr2]=pkt.info
+        if pkt.haslayer(IPv6):
+            self.put_queue(pkt)
 
 
       

@@ -112,11 +112,13 @@ class SendMsgs:
         return DHCP6_Advertise(trid=test.get_xid())
     
     def dhcp_client_id(self,test=None):
+
         return DHCP6OptClientId(duid=test.get_client_duid())
 
     def dhcp_server_id(self,test=None):
-        return DHCP6OptServerId(duid=test.get_server_duid())
 
+        #return DHCP6OptServerId(duid=test.get_server_duid())
+        return DHCP6OptServerId(duid=b'\x00\x01\x00\x01\x1f\xef\x03\x96\x44\x87\xfc\xba\x75\x46')
     def opt_ia_na(self,test=None):
         # optcode    : ShortEnumField                      = (25)
         # optlen     : FieldLenField                       = (None)
@@ -124,6 +126,10 @@ class SendMsgs:
         # T1         : IntField                            = (None)
         # T2         : IntField                            = (None)
         # iapdopt    : PacketListField                     = ([])
+        print('TIPO IAID_NA')
+        print(type(test.get_iaid()))
+        logging.info('TIPO IAID_NA')
+        logging.info(type(test.get_iaid()))
         return DHCP6OptIA_NA(iaid = test.get_iaid(),\
                             T1 = int(self.__config.get('setup1-1_advertise','t1')),\
                             T2 = int(self.__config.get('setup1-1_advertise','t2')),\
@@ -141,6 +147,8 @@ class SendMsgs:
 # plen       : ByteField                           = (48)
 # prefix     : IP6Field                            = ('2001:db8::')
 # iaprefopts : PacketListField                     = ([])
+        #logging.info('TIPO IAID_NA')
+        #logging.info(type(test.get_iaid()))
         return DHCP6OptIA_PD(iaid =test.get_iaid(),\
                             T1 = int(self.__config.get('setup1-1_advertise','t1')),\
                             T2 = int(self.__config.get('setup1-1_advertise','t2')),\
@@ -176,9 +184,6 @@ class SendMsgs:
         return DHCP6OptAuth(replay=self.__config.get('t1.6.3','replay'),\
                             authinfo = self.__config.get('t1.6.3','authinfo'))
         
-
-
-
     def send_tr1_RA(self,fields=None):
         # tr1_et = Ether(src=self.__wan_mac_tr1)
         # tr1_ip = IPv6(src=self.__link_local_addr,\
@@ -247,8 +252,4 @@ class SendMsgs:
             self.dhcp_server_id(fields)/\
             self.dhcp_reconfigure(fields)/\
             self.dhcp_auth(),\
-            #self.opt_ia_na()/\
-            #self.opt_ia_pd()/\
-            #self.opt_dns_server()/\
-            #self.opt_dns_domain(),\
             iface=self.__wan_device_tr1,inter=1)

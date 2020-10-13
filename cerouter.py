@@ -4,7 +4,7 @@ from test161 import Test161
 from test162a import Test162a
 from test162b import Test162b
 from test162c import Test162c
-#from test163a import Test163a
+from test163a import Test163a
 #from test163b import Test163b
 format = "%(asctime)s: %(message)s"
 logging.basicConfig(format=format, level=logging.DEBUG,
@@ -66,8 +66,7 @@ class CeRouter(Profile):
         #self.configure_interfaces()
         #self.wait_lan_connect()
         #self.add_step(Test161(self.__config))
-        self.add_step(Test162c(self.__config))
         #self.add_step(Test162a(self.__config))
         #self.add_step(Test162b(self.__config))
-        #self.add_step(Test163a(self.__config))
+        self.add_step(Test163a(self.__config))
         #self.add_step(Test163b(self.__config))
