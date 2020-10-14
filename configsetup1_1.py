@@ -51,6 +51,7 @@ class ConfigSetup1_1:
         self.__global_ns_ok = False
         self.__dhcp_ok = False
         self.__iaid = None
+        self.__dhcp_reconf_type = None
         self.__local_addr_ceRouter =None
         self.__sendmsgssetup1_1 = SendMsgs(self.__config)
         self.__wan_device_tr1 = self.__config.get('wan','device_wan_tr1')
@@ -210,6 +211,12 @@ class ConfigSetup1_1:
     def get_ND_local_OK(self):
         return  self.__ND_local_OK
 
+    def get_dhcp_reconf_type(self):
+        return self.__dhcp_reconf_type
+    
+    def set_dhcp_reconf_type(self,valor):
+        self.__dhcp_reconf_type = valor
+
     def run_setup1_1(self,pkt):
         
 
@@ -229,8 +236,8 @@ class ConfigSetup1_1:
 
 
         if pkt.haslayer(DHCP6_Solicit):
-            print('send_dhcpadv:')
-            logging.info('send_dhcp_adv:')
+            #print('send_dhcpadv:')
+            #logging.info('send_dhcp_adv:')
             self.set_xid(pkt[DHCP6_Solicit].trid)
             self.set_client_duid(pkt[DHCP6OptClientId].duid)
             self.set_server_duid((self.__config.get('setup1-1_advertise','server_duid')))
@@ -243,8 +250,8 @@ class ConfigSetup1_1:
             self.__sendmsgssetup1_1.send_dhcp_advertise(self)
 
         if pkt.haslayer(DHCP6_Request):
-            print('send_dhcpreply:')
-            logging.info('send_dhcp_reply:')
+            #print('send_dhcpreply:')
+            #logging.info('send_dhcp_reply:')
             self.set_ether_src(self.__config.get('wan','link_local_mac'))
             self.set_ether_dst(self.get_ether_dst())
             self.set_ipv6_dst(self.get_local_addr_ceRouter())
@@ -254,8 +261,8 @@ class ConfigSetup1_1:
             self.__setup1_1_OK = True
 
         if self.__dhcp_ok:
-            print('send_icmp_ns:')
-            logging.info('send_icmp_ns:')
+            #print('send_icmp_ns:')
+            #logging.info('send_icmp_ns:')
             self.set_ether_src(self.__config.get('multicast','all_mac_nodes'))
             self.set_ether_dst(self.__config.get('wan','link_local_mac'))
             self.set_ipv6_dst(self.__config.get('multicast','all_nodes_addr'))
@@ -266,8 +273,8 @@ class ConfigSetup1_1:
             
         #1 sned ping test
         if self.__ND_local_OK and not self.__local_ping_OK:
-            print('send_echoreq:')
-            logging.info('send_echoreq:')
+            #print('send_echoreq:')
+            #logging.info('send_echoreq:')
             self.set_ipv6_src(self.__config.get('wan','link_local_addr'))
             self.set_ipv6_dst(self.get_local_addr_ceRouter())
             self.set_ether_src(self.__config.get('wan','link_local_mac'))
@@ -277,7 +284,7 @@ class ConfigSetup1_1:
 
 
         if pkt.haslayer(ICMPv6EchoReply):
-            print('DESTINO IPv6:' + pkt[IPv6].dst)
+            #print('DESTINO IPv6:' + pkt[IPv6].dst)
             if pkt[IPv6].dst == self.__config.get('wan','link_local_addr'):
-                print('DESTINO IPv6 OKKKK')
+                #print('DESTINO IPv6 OKKKK')
                 self.__local_ping_OK = True

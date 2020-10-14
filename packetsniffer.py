@@ -40,10 +40,10 @@ class PacketSniffer(Thread):
         logging.info('AsyncSniffer stop')
         self.__AsySnif.stop()
 
-    def run(self):
+    #def run(self):
         #print('run')
         #self.create()
-        print (threading.currentThread().getName(), 'Run')
+        #   print (threading.currentThread().getName(), 'Run')
         #logging.info('Run')
         #sniff(iface=self.__interface,prn=self.PacketHandler)
         # if stop():
@@ -51,6 +51,9 @@ class PacketSniffer(Thread):
 
     def put_queue(self,value):
         self.queue.put(value)
+
+    def full_queue(self):
+        return self.queue.full()
 
     def get_queue(self):
         return self.queue.get()

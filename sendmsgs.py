@@ -10,6 +10,7 @@ from scapy.all import *
 from config import Config
 import time
 from packetsniffer import PacketSniffer
+import codecs
 
 
 # - Seleciona a interface
@@ -29,8 +30,8 @@ class SendMsgs:
         #self.self_testing = self
         self.__queue_wan = Queue()
         self.__queue_lan = Queue()
-        logging.info('self.__queue_size_inicio162')
-        logging.info(self.__queue_wan.qsize())
+        #logging.info('self.__queue_size_inicio162')
+        #logging.info(self.__queue_wan.qsize())
         self.__config = config
         self.__interface = None
         self.__pkt = None
@@ -71,14 +72,14 @@ class SendMsgs:
 #sendp(Ether()/IPv6()/UDP()/DHCP6_Advertise()/DHCP6OptClientId()/DHCP6OptServerId()/DHCP6OptIA_NA()/DHCP6OptIA_PD()/DHCP6OptDNSServers()/DHCP6OptDNSDomains(),iface='lo')
 # TR1 transmits a Router Advertisement to the all-nodes multicast address with the M and O Flag
     def ether(self,test=None):
-        print('etheraddres')
-        print (test.get_ether_dst())
+        #print('etheraddres')
+        #print (test.get_ether_dst())
         return Ether(src= test.get_ether_src() if test else self.__wan_mac_tr1,\
                 dst = test.get_ether_dst() if test else None)
 
     def ipv6(self,test=None):
-        print('ipv6addres')
-        print (test.get_ipv6_dst())
+        #print('ipv6addres')
+        #print (test.get_ipv6_dst())
         return IPv6(src=test.get_ipv6_src() if test else self.__link_local_addr,\
                     dst= test.get_ipv6_dst() if test else self.__all_nodes_addr)
                     #dst = self.__config.get('setup1-1_advertise','ipv6_addr'))
@@ -105,9 +106,12 @@ class SendMsgs:
     def udp(self):
         return UDP()
 
-    def dhcp(self):
-        return DHCP6()
-
+    def dhcp(self,test=None):
+        if test:
+            return DHCP6(msgtype=int(test.get_dhcp_reconf_type()))
+        else:
+            return DHCP6()
+    
     def dhcp_advertise(self,test=None):
         return DHCP6_Advertise(trid=test.get_xid())
     
@@ -126,10 +130,10 @@ class SendMsgs:
         # T1         : IntField                            = (None)
         # T2         : IntField                            = (None)
         # iapdopt    : PacketListField                     = ([])
-        print('TIPO IAID_NA')
-        print(type(test.get_iaid()))
-        logging.info('TIPO IAID_NA')
-        logging.info(type(test.get_iaid()))
+        #print('TIPO IAID_NA')
+        #print(type(test.get_iaid()))
+        #logging.info('TIPO IAID_NA')
+        #logging.info(type(test.get_iaid()))
         return DHCP6OptIA_NA(iaid = test.get_iaid(),\
                             T1 = int(self.__config.get('setup1-1_advertise','t1')),\
                             T2 = int(self.__config.get('setup1-1_advertise','t2')),\
@@ -171,7 +175,12 @@ class SendMsgs:
         return ICMPv6EchoRequest()
 
     def dhcp_reconfigure(self,test):
-        return DHCP6OptReconfMsg(msgtype=int(test.get_dhcp_reconf_type()))
+        print('int(test.get_dhcp_reconf_type()')
+        print(test.get_dhcp_reconf_type())
+        print('type(test.get_dhcp_reconf_type()')
+        print(type(test.get_dhcp_reconf_type()))
+        #return DHCP6OptReconfMsg(msgtype=int(test.get_dhcp_reconf_type()))
+        return DHCP6OptReconfMsg()
     
     def dhcp_auth(self,test=None):
         # optcode    : ShortEnumField                      = (11)
@@ -181,8 +190,16 @@ class SendMsgs:
         # rdm        : ByteEnumField                       = (0)
         # replay     : StrFixedLenField                    = ('\x00\x00\x00\x00\x00\x00\x00\x00')
         # authinfo   : StrLenField   
-        return DHCP6OptAuth(replay=self.__config.get('t1.6.3','replay'),\
-                            authinfo = self.__config.get('t1.6.3','authinfo'))
+        #return DHCP6OptAuth(replay=self.__config.get('t1.6.3','replay'),\
+        rep = b'\x11\x22\x33\x44\x55\x66\x77\x89'
+        rep_s = '\x11\x22\x33\x44\x55\x66\x77\x89'
+        aut = b'\x02\xec\xce\x76\x7c\x72\x39\x67\xba\xa7\x18\xb0\x04\xfc\x66\x81\xdf'
+        aut_s = '\x02\xec\xce\x76\x7c\x72\x39\x67\xba\xa7\x18\xb0\x04\xfc\x66\x81\xdf'
+        return DHCP6OptAuth(replay=rep,\
+                            authinfo = aut)
+        #return DHCP6OptAuth(replay=self.__config.get('t1.6.3','replay'),\
+                            #authinfo = self.__config.get('t1.6.3','authinfo'))
+                            
         
     def send_tr1_RA(self,fields=None):
         # tr1_et = Ether(src=self.__wan_mac_tr1)
@@ -247,9 +264,19 @@ class SendMsgs:
         sendp(self.ether(fields)/\
             self.ipv6(fields)/\
             self.udp()/\
-            self.dhcp()/\
+            self.dhcp(fields)/\
             self.dhcp_client_id(fields)/\
             self.dhcp_server_id(fields)/\
             self.dhcp_reconfigure(fields)/\
             self.dhcp_auth(),\
+            iface=self.__wan_device_tr1,inter=1)
+
+    def send_dhcp_reconfigure_no_auth(self,fields=None):
+        sendp(self.ether(fields)/\
+            self.ipv6(fields)/\
+            self.udp()/\
+            self.dhcp(fields)/\
+            self.dhcp_client_id(fields)/\
+            self.dhcp_server_id(fields)/\
+            self.dhcp_reconfigure(fields),\
             iface=self.__wan_device_tr1,inter=1)

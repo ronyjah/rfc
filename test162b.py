@@ -34,34 +34,6 @@ class Test162b:
         self.__config = config
         self.__interface = None
         self.__pkt = None
-        # self.__valid = False
-        # self.__result = None
-        # self.__device_lan_tn1 = None
-        # self.__lan_mac_tn1 = None
-        # self.__ceRouter_mac_addr = None
-        # self.__flag_M = None
-        # self.__flag_O = None
-        # self.__flag_chlim = None
-        # self.__flag_L = None
-        # self.__flag_A = None
-        # self.__flag_R = None
-        # self.__validlifetime = None
-        # self.__preferredlifetime = None
-        # self.__interval = None
-        # self.__routerlifetime = None
-        # self.__ipv6_dst =None
-        # self.__ipv6_src = None
-        # self.__ether_src = None
-        # self.__ether_dst = None
-        # self.__xid = None
-        # self.__server_duid = None
-        # self.__client_duid = None
-        # self.__ND_local_OK = False
-        # self.__setup1_1_OK = False
-        # self.__local_ping_OK = False
-        # self.__global_ns_ok = False
-        # self.__dhcp_ok = False
-        # self.__iaid = None
         self.__local_addr_ceRouter =None
         self.__sendmsgs = SendMsgs(self.__config)
         self.__config_setup1_1 = ConfigSetup1_1(self.__config)
@@ -107,10 +79,6 @@ class Test162b:
                 if pkt.haslayer(ICMPv6EchoReply):
 
                     mac_dst = pkt[Ether].dst
-                    print('=======mac_dst===========')
-                    print(mac_dst)
-                    print('=======mac_ra_mac===========')
-                    print(self.__config.get('wan','ra_mac'))
                     if mac_dst == self.__config.get('wan','ra_mac'):
                         return True
                     else:

@@ -18,7 +18,7 @@ format = "%(asctime)s: %(message)s"
 logging.basicConfig(format=format, level=logging.DEBUG,
                     datefmt="%H:%M:%S")
 
-class Test163b:
+class Test164a:
 
     def __init__(self,config):
         self.__queue_wan = Queue()
@@ -33,11 +33,11 @@ class Test163b:
         self.__wan_mac_tr1 = self.__config.get('wan','wan_mac_tr1')
         self.__link_local_addr = self.__config.get('wan','link_local_addr')
         self.__all_nodes_addr = self.__config.get('multicast','all_nodes_addr')
-        self.__test_desc = self.__config.get('tests','1.6.3b')
+        self.__test_desc = self.__config.get('tests','1.6.4a')
         
 
     def run(self):
-        self.__packet_sniffer_wan = PacketSniffer('test163b',self.__queue_wan,self,self.__config,self.__wan_device_tr1)
+        self.__packet_sniffer_wan = PacketSniffer('test164a',self.__queue_wan,self,self.__config,self.__wan_device_tr1)
         self.__packet_sniffer_wan.start()
         logging.info(self.__test_desc)
         while not self.__queue_wan.full():
