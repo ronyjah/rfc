@@ -11,7 +11,8 @@ from config import Config
 import time
 from packetsniffer import PacketSniffer
 import codecs
-
+import hmac
+import codecs
 
 # - Seleciona a interface
 # - recebe thread de captura das mensagens já iniciada na main
@@ -45,6 +46,8 @@ class SendMsgs:
         self.__flag_chlim = 64
         self.__flag_L = 1
         self.__flag_A = 0
+        self.__my_key = '\x01TAHITEST89ABCDEF'
+        self.__rep = b'\x11\x22\x33\x44\x55\x66\x77\x89'
         self.__flag_R = 0
         self.__validlifetime = 600
         self.__preferredlifetime = 600
@@ -117,7 +120,7 @@ class SendMsgs:
     
     def dhcp_client_id(self,test=None):
 
-        return DHCP6OptClientId(duid=test.get_client_duid())
+        return DHCP6OptClientId(duid=b'\x00\x01\x00\x01\xc7\x92\xbc\x9a\x00\xe0\x4c\x86\x70\x3c')
 
     def dhcp_server_id(self,test=None):
 
@@ -180,7 +183,7 @@ class SendMsgs:
         print('type(test.get_dhcp_reconf_type()')
         print(type(test.get_dhcp_reconf_type()))
         #return DHCP6OptReconfMsg(msgtype=int(test.get_dhcp_reconf_type()))
-        return DHCP6OptReconfMsg()
+        return DHCP6OptReconfMsg(msgtype=5)
     
     def dhcp_auth(self,test=None):
         # optcode    : ShortEnumField                      = (11)
@@ -196,11 +199,36 @@ class SendMsgs:
         aut = b'\x02\xec\xce\x76\x7c\x72\x39\x67\xba\xa7\x18\xb0\x04\xfc\x66\x81\xdf'
         aut_s = '\x02\xec\xce\x76\x7c\x72\x39\x67\xba\xa7\x18\xb0\x04\xfc\x66\x81\xdf'
         return DHCP6OptAuth(replay=rep,\
-                            authinfo = aut)
+                            authinfo = self.__hexdigest)
         #return DHCP6OptAuth(replay=self.__config.get('t1.6.3','replay'),\
                             #authinfo = self.__config.get('t1.6.3','authinfo'))
                             
-        
+    def dhcp_auth2(self,test=None):
+        # optcode    : ShortEnumField                      = (11)
+        # optlen     : FieldLenField                       = (None)
+        # proto      : ByteEnumField                       = (3)
+        # alg        : ByteEnumField                       = (1)
+        # rdm        : ByteEnumField                       = (0)
+        # replay     : StrFixedLenField                    = ('\x00\x00\x00\x00\x00\x00\x00\x00')
+        # authinfo   : StrLenField   
+        #return DHCP6OptAuth(replay=self.__config.get('t1.6.3','replay'),\
+        rep = b'\x11\x22\x33\x44\x55\x66\x77\x88'
+        rep_s = '\x11\x22\x33\x44\x55\x66\x77\x89'
+        aut = b'\x02\xec\xce\x76\x7c\x72\x39\x67\xba\xa7\x18\xb0\x04\xfc\x66\x81\xdf'
+        aut_s = '\x02\xec\xce\x76\x7c\x72\x39\x67\xba\xa7\x18\xb0\x04\xfc\x66\x81\xdf'
+        #return DHCP6OptAuth(replay=rep,\
+        #                    authinfo = aut)
+
+
+        return DHCP6OptAuth(replay=rep,\
+                            authinfo = self.__my_key.encode())
+
+
+    def dhcp_auth_zero(self):
+    
+        return DHCP6OptAuth(replay=b'\x11\x22\x33\x44\x55\x66\x77\x89',\
+                            authinfo = b'\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+
     def send_tr1_RA(self,fields=None):
         # tr1_et = Ether(src=self.__wan_mac_tr1)
         # tr1_ip = IPv6(src=self.__link_local_addr,\
@@ -243,6 +271,7 @@ class SendMsgs:
             self.dhcp_reply(fields)/\
             self.opt_ia_na(fields)/\
             self.opt_ia_pd(fields)/\
+            self.dhcp_auth2()/\
             self.opt_dns_server()/\
             self.opt_dns_domain(),\
             iface=self.__wan_device_tr1,inter=1)
@@ -259,8 +288,39 @@ class SendMsgs:
             self.icmpv6_ns(fields),\
             iface=self.__wan_device_tr1,inter=1)
 
+    
     def send_dhcp_reconfigure(self,fields=None):
         #sendp(Ether()/IPv6()/UDP()/DHCP6_Advertise()/DHCP6OptClientId()/DHCP6OptServerId()/DHCP6OptIA_NA()/DHCP6OptIA_PD()/DHCP6OptDNSServers()/DHCP6OptDNSDomains(),iface='lo')
+        
+        print('1')
+        a = self.dhcp(fields)
+        
+        b = self.dhcp_client_id(fields)
+        print('2')
+        c = self.dhcp_server_id(fields)
+        print('3')
+        d = self.dhcp_reconfigure(fields)
+        print('4')
+        e = self.dhcp_auth_zero()
+        print('5')
+        q = a/b/c/d/e
+        print('6')
+        logging.info(raw(q))
+        logging.info(q.show())
+        logging.info(hexdump(q))
+        print('7')
+        key = hmac.new(b'TAHITEST89ABCDEF',raw(q))
+        print('8')
+        print(key.hexdigest())
+        self.__hexdigest = key.hexdigest()
+        self.__hexdigest = '02' + self.__hexdigest
+        self.__hexdigest =  codecs.decode(self.__hexdigest,'hex_codec')
+        print(type(key.hexdigest()))
+        #c = bytearray(self.__hexdigest.encode())
+        #d = bytearray(b'\x01')
+        #logging.info(d.append[c])
+
+
         sendp(self.ether(fields)/\
             self.ipv6(fields)/\
             self.udp()/\

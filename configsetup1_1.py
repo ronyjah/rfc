@@ -51,6 +51,7 @@ class ConfigSetup1_1:
         self.__global_ns_ok = False
         self.__dhcp_ok = False
         self.__iaid = None
+        self.__disapproved = False
         self.__dhcp_reconf_type = None
         self.__local_addr_ceRouter =None
         self.__sendmsgssetup1_1 = SendMsgs(self.__config)
@@ -217,22 +218,37 @@ class ConfigSetup1_1:
     def set_dhcp_reconf_type(self,valor):
         self.__dhcp_reconf_type = valor
 
+    def get_disapproved(self):
+        return self.__disapproved
+
     def run_setup1_1(self,pkt):
         
+        if self.__disapproved:
+            return False
 
         if pkt.haslayer(ICMPv6ND_NS):
-            if pkt[ICMPv6ND_NS].tgt:
+            if pkt[ICMPv6ND_NS].tgt == '::':
+                return
+            if pkt[IPv6].src == '::':
+                return
+            if pkt[IPv6].src == self.__config.get('wan','link_local_addr'):
+                return
+            if not self.__ND_local_OK:
                 self.set_ether_dst(pkt[Ether].src)
                 self.set_local_addr_ceRouter(pkt[ICMPv6ND_NS].tgt)
                 self.__ND_local_OK = True
-
+         
         if pkt.haslayer(ICMPv6ND_RS):
-            self.set_ether_src(self.__config.get('wan','ra_address'))
-            self.set_ether_dst(self.__config.get('multicast','all_mac_nodes'))
-            self.set_ipv6_src(self.__config.get('wan','ra_address'))
-            self.set_ipv6_dst(self.__config.get('multicast','all_nodes_addr'))
-
-            self.__sendmsgssetup1_1.send_tr1_RA(self)
+            if not self.__ND_local_OK:
+                self.__disapproved = True
+                logging.info('Reprovado Setup 1.1 - Não Recebeu ICMP_NS antes de ICMP_RS')
+                return False
+            else:
+                self.set_ether_src(self.__config.get('wan','ra_address'))
+                self.set_ether_dst(self.__config.get('multicast','all_mac_nodes'))
+                self.set_ipv6_src(self.__config.get('wan','ra_address'))
+                self.set_ipv6_dst(self.__config.get('multicast','all_nodes_addr'))
+                self.__sendmsgssetup1_1.send_tr1_RA(self)
 
 
         if pkt.haslayer(DHCP6_Solicit):

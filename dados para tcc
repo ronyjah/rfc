@@ -25,4 +25,9 @@ NS endereço Local do PC remoto
 NS endereço local do PC local
 NS endereço global do PC remot
 NS endereço global do PC local
+
+Tarefas
+Retornar se receber RS antes do NS
+INformar o tipo de defeito e arrumar em todas as classes
+reenviar NS
 endereço dst do NS não pode ser o end de nodes global
