@@ -51,6 +51,7 @@ class ConfigSetup1_1:
         self.__global_ns_ok = False
         self.__dhcp_ok = False
         self.__iaid = None
+        self.__flag_prf = None
         self.__disapproved = False
         self.__dhcp_reconf_type = None
         self.__local_addr_ceRouter =None
@@ -115,12 +116,47 @@ class ConfigSetup1_1:
         self.__routerlifetime = self.__config.get('t1.6.2_flags_part_b','routerlifetime')
         self.__intervalo = self.__config.get('t1.6.2_flags_part_b','intervalo')
 
-
     def get_flag_M(self):
         return int(self.__flag_M)
-        
+
+    def set_flag_M(self,valor):
+        self.__flag_M = valor
+
     def get_flag_O(self):
         return int(self.__flag_O)
+
+    def get_flag_prf(self):
+        return int(self.__flag_prf)
+
+    def set_flag_prf(self,valor):
+        self.__flag_prf = valor
+
+    def set_flag_0(self,valor):
+        self.__flag_O = valor
+
+    def set_routerlifetime(self,valor):
+        self.__routerlifetime= valor
+
+    def set_flag_L(self,valor):
+        self.__flag_L = valor
+        
+    def set_flag_A(self,valor):
+        self.__flag_A = valor
+
+    def set_flag_R(self,valor):
+        self.__flag_R = valor
+
+    def set_validlifetime(self,valor):
+        self.__validlifetime = valor
+
+    def set_preferredlifetime(self,valor):
+        self.__preferredlifetime = valor
+
+    def set_intervalo(self,valor):
+        self.__intervalo = valor
+        
+    def set_flag_chlim(self,valor):
+        self.__flag_chlim = valor
 
     def get_flag_chlim(self):
         return int(self.__flag_chlim)
@@ -245,7 +281,6 @@ class ConfigSetup1_1:
                 #self.set_ether_dst(pkt[Ether].src)
                 self.set_mac_ceRouter(pkt[Ether].src)
                 # print('local addr ND')
-
                 self.set_local_addr_ceRouter(pkt[ICMPv6ND_NS].tgt)
                 # print('local addr')
                 # print(self.get_local_addr_ceRouter())
@@ -304,6 +339,7 @@ class ConfigSetup1_1:
             self.__sendmsgssetup1_1.send_dhcp_reply(self)
             self.__dhcp_ok = True
             self.__setup1_1_OK = True
+            logging.info("Common Test Setup 1.1 OK")
 
         if self.__dhcp_ok:
             #print('send_icmp_ns:')

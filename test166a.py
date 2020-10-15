@@ -18,7 +18,7 @@ format = "%(asctime)s: %(message)s"
 logging.basicConfig(format=format, level=logging.DEBUG,
                     datefmt="%H:%M:%S")
 
-class Test164a:
+class Test166a:
 
     def __init__(self,config):
         self.__queue_wan = Queue()
@@ -36,7 +36,7 @@ class Test164a:
         self.__wan_mac_tr1 = self.__config.get('wan','wan_mac_tr1')
         self.__link_local_addr = self.__config.get('wan','link_local_addr')
         self.__all_nodes_addr = self.__config.get('multicast','all_nodes_addr')
-        self.__test_desc = self.__config.get('tests','1.6.4')
+        self.__test_desc = self.__config.get('tests','1.6.6a')
         
 
     def get_addr_ceRouter(self):
@@ -46,20 +46,20 @@ class Test164a:
         return self.mac_ceRouter
 
     def set_flags(self):
-        self.__config_setup1_1.set_flag_M(self.__config.get('t1.6.4','flag_m'))
-        self.__config_setup1_1.set_flag_0(self.__config.get('t1.6.4','flag_o'))
-        self.__config_setup1_1.set_flag_chlim(self.__config.get('t1.6.4','flag_chlim'))
-        self.__config_setup1_1.set_flag_L(self.__config.get('t1.6.4','flag_l'))
-        self.__config_setup1_1.set_flag_A(self.__config.get('t1.6.4','flag_a'))
-        self.__config_setup1_1.set_flag_R(self.__config.get('t1.6.4','flag_r'))
-        self.__config_setup1_1.set_flag_prf(self.__config.get('t1.6.4','flag_prf'))
-        self.__config_setup1_1.set_validlifetime(self.__config.get('t1.6.4','validlifetime'))
-        self.__config_setup1_1.set_preferredlifetime(self.__config.get('t1.6.4','preferredlifetime'))
-        self.__config_setup1_1.set_routerlifetime(self.__config.get('t1.6.4','routerlifetime'))
-        self.__config_setup1_1.set_intervalo(self.__config.get('t1.6.4','intervalo'))    
+        self.__config_setup1_1.set_flag_M(self.__config.get('t1.6.6a','flag_m'))
+        self.__config_setup1_1.set_flag_0(self.__config.get('t1.6.6a','flag_o'))
+        self.__config_setup1_1.set_flag_chlim(self.__config.get('t1.6.6a','flag_chlim'))
+        self.__config_setup1_1.set_flag_L(self.__config.get('t1.6.6a','flag_l'))
+        self.__config_setup1_1.set_flag_A(self.__config.get('t1.6.6a','flag_a'))
+        self.__config_setup1_1.set_flag_R(self.__config.get('t1.6.6a','flag_r'))
+        self.__config_setup1_1.set_flag_prf(self.__config.get('t1.6.6a','flag_prf'))
+        self.__config_setup1_1.set_validlifetime(self.__config.get('t1.6.6a','validlifetime'))
+        self.__config_setup1_1.set_preferredlifetime(self.__config.get('t1.6.6a','preferredlifetime'))
+        self.__config_setup1_1.set_routerlifetime(self.__config.get('t1.6.6a','routerlifetime'))
+        self.__config_setup1_1.set_intervalo(self.__config.get('t1.6.6a','intervalo'))    
 
     def run(self):
-        self.__packet_sniffer_wan = PacketSniffer('test164',self.__queue_wan,self,self.__config,self.__wan_device_tr1)
+        self.__packet_sniffer_wan = PacketSniffer('test166a',self.__queue_wan,self,self.__config,self.__wan_device_tr1)
         self.__packet_sniffer_wan.start()
 
         self.set_flags()         
@@ -121,8 +121,9 @@ class Test164a:
                     self.__sendmsgs.send_icmp_ns(self.__config_setup1_1)
                     send_ns = True
                     continue
-            if pkt.haslayer(DHCP6_Solicit) and send_ns:       
-              
+            if send_ns:       
+                self.__config_setup1_1.set_flag_M("1")
+                self.__config_setup1_1.set_flag_O("0")
                 self.__config_setup1_1.set_ether_src(self.__config.get('wan','ra_mac'))
                 self.__config_setup1_1.set_ether_dst(self.__config.get('multicast','all_mac_nodes'))
                 self.__config_setup1_1.set_ipv6_src(self.__config.get('wan','link_local_addr'))
@@ -135,11 +136,10 @@ class Test164a:
             if send_ra:
                 if pkt.haslayer(DHCP6_Solicit):
                     if pkt.haslayer(DHCP6OptIA_NA):
-                    
-                        self.__config_setup1_1.set_flag_M("0")
-                        self.__sendmsgs.send_tr1_RA(self.__config_setup1_1)
-                        send_ra2 = True
                         return True
+                    else:
+                        return False 
+
             #if pkt.haslayer(DHCP6_Solicit) and send_ra2: 
 
                 # print('local addr')

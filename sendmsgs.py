@@ -47,16 +47,18 @@ class SendMsgs:
         self.__flag_L = 1
         self.__flag_A = 0
         self.__my_key = b'TAHITEST89ABCDEF'
+        self.__my_key_fake = b'TAHITEST89AAADEF'
         #self.__my_key_msg = '01TAHITEST89ABCDEF'
         self.__my_key_msg = b'\x01\x54\x41\x48\x49\x54\x45\x53\x54\x38\x39\x41\x42\x43\x44\x45\x46'
         self.__rep = None
-        self.__rep_base = '1122334455667788'
-        self.__flag_R = 0
-        self.__validlifetime = 600
-        self.__preferredlifetime = 600
-        self.__interval = 1
         
-        self.__routerlifetime =200
+        self.__rep_base = '1122334455667788'
+        # self.__flag_R = 0
+        # self.__validlifetime = 600
+        # self.__preferredlifetime = 600
+        # self.__interval = 1
+        
+        # self.__routerlifetime =200
         self.__wan_device_tr1 = self.__config.get('wan','device_wan_tr1')
         self.__wan_mac_tr1 = self.__config.get('wan','wan_mac_tr1')
         self.__link_local_addr = self.__config.get('wan','link_local_addr')
@@ -65,17 +67,17 @@ class SendMsgs:
         self.__test_desc = self.__config.get('tests','common1-1')
 
 
-    def set_flags_common_setup(self,test_flags):
-        self.__flag_M = test_flags.get_flag_M()
-        self.__flag_O = test_flags.get_flag_O()
-        self.__flag_chlim = test_flags.get_flag_chlim()
-        self.__flag_L = test_flags.get_flag_L()
-        self.__flag_A = test_flags.get_flag_A()
-        self.__flag_R = test_flags.get_flag_R()
-        self.__validlifetime = test_flags.get_validlifetime()
-        self.__preferredlifetime = test_flags.get_preferredlifetime()
-        self.__routerlifetime = test_flags.get_routerlifetime()
-        self.__intervalo = test_flags.get_interval()
+    # def set_flags_common_setup(self,test_flags):
+    #     self.__flag_M = test_flags.get_flag_M()
+    #     self.__flag_O = test_flags.get_flag_O()
+    #     self.__flag_chlim = test_flags.get_flag_chlim()
+    #     self.__flag_L = test_flags.get_flag_L()
+    #     self.__flag_A = test_flags.get_flag_A()
+    #     self.__flag_R = test_flags.get_flag_R()
+    #     self.__validlifetime = test_flags.get_validlifetime()
+    #     self.__preferredlifetime = test_flags.get_preferredlifetime()
+    #     self.__routerlifetime = test_flags.get_routerlifetime()
+    #     self.__intervalo = test_flags.get_interval()
 #sendp(Ether()/IPv6()/UDP()/DHCP6_Advertise()/DHCP6OptClientId()/DHCP6OptServerId()/DHCP6OptIA_NA()/DHCP6OptIA_PD()/DHCP6OptDNSServers()/DHCP6OptDNSDomains(),iface='lo')
 # TR1 transmits a Router Advertisement to the all-nodes multicast address with the M and O Flag
     def ether(self,test=None):
@@ -94,18 +96,34 @@ class SendMsgs:
                       
     
     def icmpv6_ra(self,test=None):
-        return ICMPv6ND_RA(M=self.__flag_M,\
-                            O=self.__flag_O,\
-                            routerlifetime=self.__routerlifetime,\
-                            chlim=self.__flag_chlim)
+        print("prf")
+        print (test.get_flag_prf())
+        print (type(test.get_flag_prf()))  
+        print("m")
+        print (test.get_flag_M())
+        print (type(test.get_flag_M()))        
+        print("o")
+        print (test.get_flag_O())
+        print (type(test.get_flag_O()))   
+        print("chlim")
+        print (test.get_flag_chlim())
+        print (type(test.get_flag_chlim()))   
+        print("router")
+        print (test.get_routerlifetime())
+        print (type(test.get_routerlifetime()))  
+        return ICMPv6ND_RA(M=test.get_flag_M(),\
+                            O=test.get_flag_O(),\
+                            prf = test.get_flag_prf(),\
+                            routerlifetime=test.get_routerlifetime(),\
+                            chlim=test.get_flag_chlim())
 
-    def icmpv6_pd(self,Test=None):
-        return ICMPv6NDOptPrefixInfo(L=self.__flag_L,\
-                                        A=self.__flag_A,\
-                                        R=self.__flag_R,\
-                                        validlifetime=self.__validlifetime,\
-                                        preferredlifetime=self.__preferredlifetime,\
-                                        prefix=self.__global_addr)
+    def icmpv6_pd(self,test=None):
+        return ICMPv6NDOptPrefixInfo(L=test.get_flag_L(),\
+                                        A=test.get_flag_A(),\
+                                        R=test.get_flag_R(),\
+                                        validlifetime=test.get_validlifetime(),\
+                                        preferredlifetime=test.get_preferredlifetime(),\
+                                        prefix=self.__config.get('wan','global_addr'))
 
     def icmpv6_ns(self,test=None):
         return ICMPv6ND_NS(tgt=test.get_tgt())
@@ -202,6 +220,7 @@ class SendMsgs:
         rep_s = '\x11\x22\x33\x44\x55\x66\x77\x89'
         aut = b'\x02\xec\xce\x76\x7c\x72\x39\x67\xba\xa7\x18\xb0\x04\xfc\x66\x81\xdf'
         aut_s = '\x02\xec\xce\x76\x7c\x72\x39\x67\xba\xa7\x18\xb0\x04\xfc\x66\x81\xdf'
+        print(14)
         return DHCP6OptAuth(replay=self.__rep,\
                             authinfo = self.__hexdigest)
         #return DHCP6OptAuth(replay=self.__config.get('t1.6.3','replay'),\
@@ -232,7 +251,11 @@ class SendMsgs:
         return DHCP6OptAuth(replay=self.__rep,\
                             authinfo = b'\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
 
+
+
+
     def send_tr1_RA(self,fields=None):
+        
         # tr1_et = Ether(src=self.__wan_mac_tr1)
         # tr1_ip = IPv6(src=self.__link_local_addr,\
         #               dst=self.__all_nodes_addr)
@@ -291,45 +314,46 @@ class SendMsgs:
             self.icmpv6_ns(fields),\
             iface=self.__wan_device_tr1,inter=1)
 
-    
+
+
     def send_dhcp_reconfigure(self,fields=None):
         #sendp(Ether()/IPv6()/UDP()/DHCP6_Advertise()/DHCP6OptClientId()/DHCP6OptServerId()/DHCP6OptIA_NA()/DHCP6OptIA_PD()/DHCP6OptDNSServers()/DHCP6OptDNSDomains(),iface='lo')
 
         s = int(self.__rep_base,16) + 1
         s = str(hex(s).strip('0x'))
         self.__rep = codecs.decode(s,'hex_codec')
-        print('1')
+  #      print('1')
         a = self.dhcp(fields)
         
         b = self.dhcp_client_id(fields)
-        print('2')
+  #      print('2')
         c = self.dhcp_server_id(fields)
-        print('3')
+  #      print('3')
         d = self.dhcp_reconfigure(fields)
-        print('4')
+  #      print('4')
         e = self.dhcp_auth_zero()
-        print('5')
+    #    print('5')
         q = a/b/c/d/e
-        print('6')
-        logging.info(raw(q))
-        logging.info(q.show())
-        logging.info(hexdump(q))
-        print('7')
+    #    print('6')
+  #      logging.info(raw(q))
+ #       logging.info(q.show())
+ #       logging.info(hexdump(q))
+   #     print('7')
         key = hmac.new(self.__my_key,raw(q))
-        print('8')
-        print(key.hexdigest())
+   #     print('8')
+  #      print(key.hexdigest())
+   #     print('9')        
         self.__hexdigest = key.hexdigest()
+   #     print('10')
         self.__hexdigest = '02' + self.__hexdigest
+    #    print('11')
         self.__hexdigest =  codecs.decode(self.__hexdigest,'hex_codec')
-        print(type(key.hexdigest()))
-        #>>> s = '1122334455667788'
-
-        #c = bytearray(self.__hexdigest.encode())
-        #d = bytearray(b'\x01')
-        #logging.info(d.append[c])
-
+   #     print('12')
+  #      print(type(key.hexdigest()))
+   #     print('13')
 
         sendp(self.ether(fields)/\
+            
             self.ipv6(fields)/\
             self.udp()/\
             self.dhcp(fields)/\
@@ -338,6 +362,14 @@ class SendMsgs:
             self.dhcp_reconfigure(fields)/\
             self.dhcp_auth(),\
             iface=self.__wan_device_tr1,inter=1)
+        #>>> s = '1122334455667788'
+
+        #c = bytearray(self.__hexdigest.encode())
+        #d = bytearray(b'\x01')
+        #logging.info(d.append[c])
+
+
+
 
     def send_dhcp_reconfigure_no_auth(self,fields=None):
         sendp(self.ether(fields)/\
@@ -347,4 +379,49 @@ class SendMsgs:
             self.dhcp_client_id(fields)/\
             self.dhcp_server_id(fields)/\
             self.dhcp_reconfigure(fields),\
+            iface=self.__wan_device_tr1,inter=1)
+
+    def send_dhcp_reconfigure_wrong(self,fields=None):
+
+
+        s = int(self.__rep_base,16) + 1
+        s = str(hex(s).strip('0x'))
+        self.__rep = codecs.decode(s,'hex_codec')
+   #     print('1')
+        a = self.dhcp(fields)
+        
+        b = self.dhcp_client_id(fields)
+   #     print('2')
+        c = self.dhcp_server_id(fields)
+    #    print('3')
+        d = self.dhcp_reconfigure(fields)
+    #    print('4')
+        e = self.dhcp_auth_zero()
+     #   print('5')
+        q = a/b/c/d/e
+  #      print('6')
+  #      logging.info(raw(q))
+ #       logging.info(q.show())
+  #      logging.info(hexdump(q))
+ #       print('7')
+        key = hmac.new(self.__my_key_fake,raw(q))
+ #       print('8')
+        print(key.hexdigest())
+#        print('8')
+        self.__hexdigest = key.hexdigest()
+#        print('8')
+        self.__hexdigest = '02' + self.__hexdigest
+#        print('8')
+        self.__hexdigest =  codecs.decode(self.__hexdigest,'hex_codec')
+        # print('8')
+        # print(type(key.hexdigest()))
+        #>>> s = '1122334455667788'
+        sendp(self.ether(fields)/\
+            self.ipv6(fields)/\
+            self.udp()/\
+            self.dhcp(fields)/\
+            self.dhcp_client_id(fields)/\
+            self.dhcp_server_id(fields)/\
+            self.dhcp_reconfigure(fields)/\
+            self.dhcp_auth(),\
             iface=self.__wan_device_tr1,inter=1)

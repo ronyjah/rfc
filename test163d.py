@@ -34,7 +34,7 @@ class Test163d:
         self.__link_local_addr = self.__config.get('wan','link_local_addr')
         self.__all_nodes_addr = self.__config.get('multicast','all_nodes_addr')
         self.__test_desc = self.__config.get('tests','1.6.3d')
-
+        
     def run(self):
         self.__packet_sniffer_wan = PacketSniffer('test163d',self.__queue_wan,self,self.__config,self.__wan_device_tr1)
         self.__packet_sniffer_wan.start()
@@ -44,7 +44,6 @@ class Test163d:
         sent_reconfigure = False
         time_over = False
         while not self.__queue_wan.full():
-            #print('1')
             while self.__queue_wan.empty():
                 if t_test < 60:
                     time.sleep(1)
@@ -52,28 +51,44 @@ class Test163d:
                 else:
                     time_over = True
             pkt = self.__queue_wan.get()
-            print(self.__config_setup1_1.get_setup1_1_OK())
+
             if not self.__config_setup1_1.get_setup1_1_OK():
 
-                self.__config_setup1_1.run_setup1_1(pkt)
+                if not self.__config_setup1_1.get_disapproved():
+                    self.__config_setup1_1.run_setup1_1(pkt)
+                else:
+                    logging.info('Reprovado Teste 1.6.3.c - Falha em completar o Common Setup 1.1 da RFC')
+                    self.__packet_sniffer_wan.stop() 
+                    return False
 
-            if self.__config_setup1_1.get_setup1_1_OK():
-                self.__config_setup1_1.set_ipv6_src(self.__config.get('wan','link_local_addr'))
-                self.__config_setup1_1.set_ipv6_dst(self.__config.get('multicast','dhcp_relay_agents_and_servers_addr'))
-                self.__config_setup1_1.set_ether_src(self.__config.get('wan','link_local_mac'))
-                self.__config_setup1_1.set_ether_dst(self.__config_setup1_1.get_ether_dst())
-                self.__config_setup1_1.set_dhcp_reconf_type(self.__config.get('t1.6.3','msg_type'))
+            else: 
+
 
                 if pkt.haslayer(DHCP6_Renew):
                     logging.info(pkt.show())
-                    return False
-                elif time_over:
-                    return True
+                    logging.info('Reprovado Teste 1.6.3.d - Respondeu ao DHCP6 reconfigure de chave falsa')
 
+                    self.__packet_sniffer_wan.stop()
+                    return False
+                elif time_over :
+                    if not sent_reconfigure:
+                        self.__packet_sniffer_wan.stop()
+                        logging.info('Falha: Teste 1.6.3.d. Tempo finalizado mas Não Enviou DHCP Reconfigure')
+
+                        return False
+                    else:
+                        self.__packet_sniffer_wan.stop() 
+                        logging.info('Aprovado: Teste 1.6.3.d. Tempo finalizado e não recebeu DHCP Renew em DHCP Reconf adulterado')
+
+                        return True
                 if not sent_reconfigure:
 
-                    self.__sendmsgs.send_dhcp_reconfigure_no_auth(self.__config_setup1_1)
-
+                    self.__config_setup1_1.set_ipv6_src(self.__config.get('wan','link_local_addr'))
+                    self.__config_setup1_1.set_ipv6_dst(self.__config.get('multicast','dhcp_relay_agents_and_servers_addr'))
+                    self.__config_setup1_1.set_ether_src(self.__config.get('wan','link_local_mac'))
+                    self.__config_setup1_1.set_ether_dst(self.__config_setup1_1.get_ether_dst())
+                    self.__config_setup1_1.set_dhcp_reconf_type(self.__config.get('t1.6.3','msg_type'))
+                    self.__sendmsgs.send_dhcp_reconfigure_wrong(self.__config_setup1_1)
                     sent_reconfigure = True
             
 
