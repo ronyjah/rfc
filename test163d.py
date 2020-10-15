@@ -38,6 +38,7 @@ class Test163d:
     def run(self):
         self.__packet_sniffer_wan = PacketSniffer('test163d',self.__queue_wan,self,self.__config,self.__wan_device_tr1)
         self.__packet_sniffer_wan.start()
+        self.__config_setup1_1.flags_partA()
         logging.info(self.__test_desc)
         t_test = 0
         sent_reconfigure = False

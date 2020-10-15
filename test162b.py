@@ -29,8 +29,6 @@ class Test162b:
     def __init__(self,config):
         self.__queue_wan = Queue()
         self.__queue_lan = Queue()
-        # logging.info('self.__queue_size_inicio162')
-        # logging.info(self.__queue_wan.qsize())
         self.__config = config
         self.__interface = None
         self.__pkt = None
@@ -43,55 +41,52 @@ class Test162b:
         self.__all_nodes_addr = self.__config.get('multicast','all_nodes_addr')
         self.__test_desc = self.__config.get('tests','1.6.2b')
         
+    def send_echo_request_global(self):
+        self.__config_setup1_1.set_ipv6_src(self.__config.get('wan','global_wan_addr'))
+        self.__config_setup1_1.set_ipv6_dst(self.__config.get('setup1-1_advertise','ia_na_address'))
+        self.__config_setup1_1.set_ether_src(self.__config.get('wan','link_local_mac'))
+        self.__config_setup1_1.set_ether_dst(self.get_ether_dst())
+        self.__sendmsgs.send_echo_request(self.__config_setup1_1)
 
     def run(self):
-        self.__packet_sniffer_wan = PacketSniffer('test162c',self.__queue_wan,self,self.__config,self.__wan_device_tr1)
+        self.__packet_sniffer_wan = PacketSniffer('test162b',self.__queue_wan,self,self.__config,self.__wan_device_tr1)
         self.__config_setup1_1.flags_partB()
         self.__packet_sniffer_wan.start()
-        # logging.info('Task Desc')
         logging.info(self.__test_desc)
-        # logging.info('Qsize')
-        # logging.info(self.__queue_wan.qsize())
+        t_test = 0
+        time_over = False
+
         while not self.__queue_wan.full():
-
+            while self.__queue_wan.empty():
+                if t_test < 60:
+                    time.sleep(1)
+                    t_test = t_test + 1
+                else:
+                    time_over = True
             pkt = self.__queue_wan.get()
-            
-            while not pkt.haslayer(IPv6):
-                pkt = self.__queue_wan.get()
-            logging.info(pkt.show())
             if not self.__config_setup1_1.get_setup1_1_OK():
-                # logging.info('self.__queue_size')
-                # logging.info(self.__queue_wan.qsize())
-                self.__config_setup1_1.run_setup1_1(pkt)
-
-            if self.__config_setup1_1.get_setup1_1_OK():
-                # self.set_ipv6_src(self.__config.get('wan','global_wan_addr'))
-                # self.set_ipv6_dst(self.__config.get('setup1-1_advertise','ia_na_address'))
-                # self.set_ether_src(self.__config.get('wan','link_local_mac'))
-                # self.set_ether_dst(self.get_ether_dst())
-                # self.__sendmsgs.send_echo_request(self)
-                self.__config_setup1_1.set_ipv6_src(self.__config.get('wan','global_wan_addr'))
-                self.__config_setup1_1.set_ipv6_dst(self.__config.get('setup1-1_advertise','ia_na_address'))
-                self.__config_setup1_1.set_ether_src(self.__config.get('wan','link_local_mac'))
-                self.__config_setup1_1.set_ether_dst(self.__config_setup1_1.get_ether_dst())
-                self.__sendmsgs.send_echo_request(self.__config_setup1_1)
-
+                if not self.__config_setup1_1.get_disapproved():
+                    self.__config_setup1_1.run_setup1_1(pkt)
+                else:
+                    self.__packet_sniffer_wan.stop()
+                    logging.info('Reprovado Teste 1.6.2.b - Falha em completar o Common Setup 1.1 da RFC')
+                    return False
+            
+            else: 
+                self.send_echo_request_global()
                 if pkt.haslayer(ICMPv6EchoReply):
-
                     mac_dst = pkt[Ether].dst
                     if mac_dst == self.__config.get('wan','ra_mac'):
+                        self.__packet_sniffer_wan.stop()
+                        logging.info('Aprovado Teste 1.6.2.b: Recebido Mensagem Echo Reply com MAC do TN1 em MAC destino')
                         return True
                     else:
+                        self.__packet_sniffer_wan.stop()
+                        logging.info('Reprovado Teste 1.6.2.b: Recebido Mensagem Echo Reply Sem MAC do TN1 em MAC destino')
                         return False
         while not self.__queue_wan.empty():
-            # print('RS1')
             pkt = self.__queue_wan.get()       
-        # logging.info('Passo4-t162run_sttop-theard success')
-        # logging.info('self.__queue_size_fim')
-        # logging.info(self.__queue_wan.qsize())  
-            #time.sleep(2)
         self.__packet_sniffer_wan.stop()
-            #time.sleep(2)
         return True
      
         

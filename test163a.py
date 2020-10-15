@@ -39,21 +39,40 @@ class Test163a:
     def run(self):
         self.__packet_sniffer_wan = PacketSniffer('test163a',self.__queue_wan,self,self.__config,self.__wan_device_tr1)
         self.__packet_sniffer_wan.start()
+        self.__config_setup1_1.flags_partA()
         logging.info(self.__test_desc)
+        t_test = 0
+
+        time_over = False
         while not self.__queue_wan.full():
+            while self.__queue_wan.empty():
+                if t_test < 60:
+                    time.sleep(1)
+                    t_test = t_test + 1
+                else:
+                    time_over = True
+
             pkt = self.__queue_wan.get()
-            logging.info(pkt.show())
+
             if not self.__config_setup1_1.get_setup1_1_OK():
-                self.__config_setup1_1.run_setup1_1(pkt)
+                if not self.__config_setup1_1.get_disapproved():
+                    self.__config_setup1_1.run_setup1_1(pkt)
+                else:
+                    self.__packet_sniffer_wan.stop() 
+                    logging.info('Reprovado Teste 1.6.3.a - Falha em completar o Common Setup 1.1 da RFC')
+                    return False
             
             if self.__config_setup1_1.get_ND_local_OK():
                 if pkt.haslayer(DHCP6_Solicit):
+
                     self.__packet_sniffer_wan.stop()
-                    while not self.__queue_wan.empty():
-                        pkt = self.__queue_wan.get() 
+                    logging.info('Aprovado Teste 1.6.3.a: Recebido Mensagem DHCPv6 Solicit')
                     return True
-        # while not pkt.haslayer(IPv6):
-        #     pkt = self.__queue_wan.get()      
+                elif time_over :
+                        self.__packet_sniffer_wan.stop()
+                        logging.info('Falha: Teste 1.6.3.a Por tempo finalizado: Não foi recebido Mensagem Solitic')
+                        return False
+   
         self.__packet_sniffer_wan.stop()
         return True
      

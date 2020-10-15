@@ -73,49 +73,57 @@ class Test162a:
         self.__test_desc = self.__config.get('tests','1.6.2a')
         
 
+    def send_echo_request_global(self):
+        self.__config_setup1_1.set_ipv6_src(self.__config.get('wan','global_wan_addr'))
+        self.__config_setup1_1.set_ipv6_dst(self.__config.get('setup1-1_advertise','ia_na_address'))
+        self.__config_setup1_1.set_ether_src(self.__config.get('wan','link_local_mac'))
+        self.__config_setup1_1.set_ether_dst(self.__config_setup1_1.get_ether_dst())
+        self.__sendmsgs.send_echo_request(self.__config_setup1_1)
+
     def run(self):
-        self.__packet_sniffer_wan = PacketSniffer('test162c',self.__queue_wan,self,self.__config,self.__wan_device_tr1)
+        self.__packet_sniffer_wan = PacketSniffer('test162a',self.__queue_wan,self,self.__config,self.__wan_device_tr1)
         self.__config_setup1_1.flags_partA()
         self.__packet_sniffer_wan.start()
         # logging.info('Task Desc')
         logging.info(self.__test_desc)
-        # logging.info('Qsize')
-        # logging.info(self.__queue_wan.qsize())
+        t_test = 0
+        time_over = False
+
         while not self.__queue_wan.full():
-
+            while self.__queue_wan.empty():
+                if t_test < 60:
+                    time.sleep(1)
+                    t_test = t_test + 1
+                else:
+                    time_over = True
             pkt = self.__queue_wan.get()
-            
-            while not pkt.haslayer(IPv6):
-                pkt = self.__queue_wan.get()
-            logging.info(pkt.show())
-            if not self.__config_setup1_1.get_setup1_1_OK():
-                # logging.info('self.__queue_size')
-                # logging.info(self.__queue_wan.qsize())
-                self.__config_setup1_1.run_setup1_1(pkt)
 
-            else:
-                print('send global IPv6 ping:')
-                logging.info('send global IPv6 ping:')
-                if pkt.haslayer(ICMPv6EchoReply):
+
+            if not self.__config_setup1_1.get_setup1_1_OK():
+
+                if not self.__config_setup1_1.get_disapproved():
+                    self.__config_setup1_1.run_setup1_1(pkt)
+                else:
+                    self.__packet_sniffer_wan.stop()
+                    logging.info('Reprovado Teste 1.6.2.a - Falha em completar o Common Setup 1.1 da RFC')
+                    return False
+
+            else: 
+                self.send_echo_request_global()
+                if time_over :
+                        self.__packet_sniffer_wan.stop()
+                        logging.info('Falha: Teste 1.6.2.a Por tempo finalizado: Não foi recebido Mensagem EchoReply')
+                        return False                
+                elif pkt.haslayer(ICMPv6EchoReply):
                     mac_dst = pkt[Ether].dst
-                    if mac_dst == self.__config.get('wan','link_local_mac'):
-                        print('Finish Test:')
-                        logging.info('Finish Test:')
-                        print('Sucesso de 1.6.2a')
-                        time.sleep(2)
+                    if mac_dst == self.__config.get('wan','link_local_addr'):
+                        self.__packet_sniffer_wan.stop()
+                        logging.info('Aprovado Teste 1.6.2.a: Recebido Mensagem Echo Reply com MAC do CeRouter em MAC destino')
                         return True
                     else:
-                        print('Finish Test:')
-                        time.sleep(2)
-                        logging.info('Finish Test:')
-                        print('Falha de 1.6.2a')
+                        self.__packet_sniffer_wan.stop()
+                        logging.info('Reprovado Teste 1.6.2.a: Recebido Mensagem Echo Reply Sem MAC do CeRouter em MAC destino')
                         return False
-                self.__config_setup1_1.set_ipv6_src(self.__config.get('wan','global_wan_addr'))
-                self.__config_setup1_1.set_ipv6_dst(self.__config.get('setup1-1_advertise','ia_na_address'))
-                self.__config_setup1_1.set_ether_src(self.__config.get('wan','link_local_mac'))
-                self.__config_setup1_1.set_ether_dst(self.__config_setup1_1.get_ether_dst())
-                self.__sendmsgs.send_echo_request(self.__config_setup1_1)
-
         while not self.__queue_wan.empty():
             # print('RS1')
             pkt = self.__queue_wan.get()       

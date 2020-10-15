@@ -46,12 +46,16 @@ class SendMsgs:
         self.__flag_chlim = 64
         self.__flag_L = 1
         self.__flag_A = 0
-        self.__my_key = '\x01TAHITEST89ABCDEF'
-        self.__rep = b'\x11\x22\x33\x44\x55\x66\x77\x89'
+        self.__my_key = b'TAHITEST89ABCDEF'
+        #self.__my_key_msg = '01TAHITEST89ABCDEF'
+        self.__my_key_msg = b'\x01\x54\x41\x48\x49\x54\x45\x53\x54\x38\x39\x41\x42\x43\x44\x45\x46'
+        self.__rep = None
+        self.__rep_base = '1122334455667788'
         self.__flag_R = 0
         self.__validlifetime = 600
         self.__preferredlifetime = 600
         self.__interval = 1
+        
         self.__routerlifetime =200
         self.__wan_device_tr1 = self.__config.get('wan','device_wan_tr1')
         self.__wan_mac_tr1 = self.__config.get('wan','wan_mac_tr1')
@@ -120,7 +124,7 @@ class SendMsgs:
     
     def dhcp_client_id(self,test=None):
 
-        return DHCP6OptClientId(duid=b'\x00\x01\x00\x01\xc7\x92\xbc\x9a\x00\xe0\x4c\x86\x70\x3c')
+        return DHCP6OptClientId(duid=test.get_client_duid())#b'\x00\x01\x00\x01\xc7\x92\xbc\x9a\x00\xe0\x4c\x86\x70\x3c')
 
     def dhcp_server_id(self,test=None):
 
@@ -198,7 +202,7 @@ class SendMsgs:
         rep_s = '\x11\x22\x33\x44\x55\x66\x77\x89'
         aut = b'\x02\xec\xce\x76\x7c\x72\x39\x67\xba\xa7\x18\xb0\x04\xfc\x66\x81\xdf'
         aut_s = '\x02\xec\xce\x76\x7c\x72\x39\x67\xba\xa7\x18\xb0\x04\xfc\x66\x81\xdf'
-        return DHCP6OptAuth(replay=rep,\
+        return DHCP6OptAuth(replay=self.__rep,\
                             authinfo = self.__hexdigest)
         #return DHCP6OptAuth(replay=self.__config.get('t1.6.3','replay'),\
                             #authinfo = self.__config.get('t1.6.3','authinfo'))
@@ -212,21 +216,20 @@ class SendMsgs:
         # replay     : StrFixedLenField                    = ('\x00\x00\x00\x00\x00\x00\x00\x00')
         # authinfo   : StrLenField   
         #return DHCP6OptAuth(replay=self.__config.get('t1.6.3','replay'),\
-        rep = b'\x11\x22\x33\x44\x55\x66\x77\x88'
+        replay_base = b'\x11\x22\x33\x44\x55\x66\x77\x88'
         rep_s = '\x11\x22\x33\x44\x55\x66\x77\x89'
         aut = b'\x02\xec\xce\x76\x7c\x72\x39\x67\xba\xa7\x18\xb0\x04\xfc\x66\x81\xdf'
         aut_s = '\x02\xec\xce\x76\x7c\x72\x39\x67\xba\xa7\x18\xb0\x04\xfc\x66\x81\xdf'
         #return DHCP6OptAuth(replay=rep,\
         #                    authinfo = aut)
-
-
-        return DHCP6OptAuth(replay=rep,\
-                            authinfo = self.__my_key.encode())
-
+         #self.__hexdigest = '02' + self.__hexdigest
+        #self.__hexdigest =  codecs.decode(self.__hexdigest,'hex_codec')       
+        return DHCP6OptAuth(replay=codecs.decode(self.__rep_base,'hex_codec'),\
+                            authinfo = self.__my_key_msg)
 
     def dhcp_auth_zero(self):
     
-        return DHCP6OptAuth(replay=b'\x11\x22\x33\x44\x55\x66\x77\x89',\
+        return DHCP6OptAuth(replay=self.__rep,\
                             authinfo = b'\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
 
     def send_tr1_RA(self,fields=None):
@@ -291,7 +294,10 @@ class SendMsgs:
     
     def send_dhcp_reconfigure(self,fields=None):
         #sendp(Ether()/IPv6()/UDP()/DHCP6_Advertise()/DHCP6OptClientId()/DHCP6OptServerId()/DHCP6OptIA_NA()/DHCP6OptIA_PD()/DHCP6OptDNSServers()/DHCP6OptDNSDomains(),iface='lo')
-        
+
+        s = int(self.__rep_base,16) + 1
+        s = str(hex(s).strip('0x'))
+        self.__rep = codecs.decode(s,'hex_codec')
         print('1')
         a = self.dhcp(fields)
         
@@ -309,13 +315,15 @@ class SendMsgs:
         logging.info(q.show())
         logging.info(hexdump(q))
         print('7')
-        key = hmac.new(b'TAHITEST89ABCDEF',raw(q))
+        key = hmac.new(self.__my_key,raw(q))
         print('8')
         print(key.hexdigest())
         self.__hexdigest = key.hexdigest()
         self.__hexdigest = '02' + self.__hexdigest
         self.__hexdigest =  codecs.decode(self.__hexdigest,'hex_codec')
         print(type(key.hexdigest()))
+        #>>> s = '1122334455667788'
+
         #c = bytearray(self.__hexdigest.encode())
         #d = bytearray(b'\x01')
         #logging.info(d.append[c])

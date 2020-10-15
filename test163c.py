@@ -38,6 +38,7 @@ class Test163c:
     def run(self):
         self.__packet_sniffer_wan = PacketSniffer('test163c',self.__queue_wan,self,self.__config,self.__wan_device_tr1)
         self.__packet_sniffer_wan.start()
+        self.__config_setup1_1.flags_partA()
         logging.info(self.__test_desc)
         t_test = 0
         sent_reconfigure = False
@@ -51,12 +52,12 @@ class Test163c:
                     time_over = True
             pkt = self.__queue_wan.get()
 
-            print(self.__config_setup1_1.get_setup1_1_OK())
             if not self.__config_setup1_1.get_setup1_1_OK():
 
                 if not self.__config_setup1_1.get_disapproved():
                     self.__config_setup1_1.run_setup1_1(pkt)
                 else:
+                    logging.info('Reprovado Teste 1.6.3.c - Falha em completar o Common Setup 1.1 da RFC')
                     self.__packet_sniffer_wan.stop() 
                     return False
 
@@ -68,14 +69,23 @@ class Test163c:
                 self.__config_setup1_1.set_dhcp_reconf_type(self.__config.get('t1.6.3','msg_type'))
 
                 if pkt.haslayer(DHCP6_Renew):
-                    logging.info('Reprovado Setup 1.6.3.c - Respondeu ao DHCP6 reconfigure incompleto')
+                    logging.info('Reprovado Teste 1.6.3.c - Respondeu ao DHCP6 reconfigure incompleto')
                     logging.info(pkt.show())
-
+                    self.__packet_sniffer_wan.stop()
                     return False
                 elif time_over :
-                    return True
+                    if not sent_reconfigure:
+                        self.__packet_sniffer_wan.stop()
+                        logging.info('Falha: Teste 1.6.3.c. Tempo finalizado mas Não Enviou DHCP Reconfigure')
+
+                        return False
+                    else:
+                        self.__packet_sniffer_wan.stop() 
+                        logging.info('Aprovado: Teste 1.6.3.c. Tempo finalizado e não recebeu DHCP Renew em DHCP Reconf adulterado')
+
+                        return True
                 if not sent_reconfigure:
-                    self.__sendmsgs.send_dhcp_reconfigure(self.__config_setup1_1)
+                    self.__sendmsgs.send_dhcp_reconfigure_no_auth(self.__config_setup1_1)
                     sent_reconfigure = True
             
 
