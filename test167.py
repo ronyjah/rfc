@@ -64,75 +64,69 @@ class Test167:
             else: 
 
 
-                if pkt.haslayer(EIGRPIntRoute):
+
+                if pkt.haslayer(EIGRPv6ExtRoute):
                     logging.info(pkt.show())
-                    logging.info('Reprovado Teste 1.6.7- Respondeu ao DHCP6 reconfigure de chave falsa')
+                    logging.info('Reprovado Teste 1.6.7- ')
+
+                    self.__packet_sniffer_wan.stop()
+                    return False
+
+                if pkt.haslayer(EIGRPExtRoute):
+                    logging.info(pkt.show())
+                    logging.info('Reprovado Teste 1.6.7- ')
 
                     self.__packet_sniffer_wan.stop()
                     return False
 
                 if pkt.haslayer(EIGRPIntRoute):
                     logging.info(pkt.show())
-                    logging.info('Reprovado Teste 1.6.7- Respondeu ao DHCP6 reconfigure de chave falsa')
-
-                    self.__packet_sniffer_wan.stop()
-                    return False
-
-                if pkt.haslayer(EIGRPIntRoute):
-                    logging.info(pkt.show())
-                    logging.info('Reprovado Teste 1.6.7- Respondeu ao DHCP6 reconfigure de chave falsa')
-
-                    self.__packet_sniffer_wan.stop()
-                    return False
-
-                if pkt.haslayer(EIGRPIntRoute):
-                    logging.info(pkt.show())
-                    logging.info('Reprovado Teste 1.6.7- Respondeu ao DHCP6 reconfigure de chave falsa')
+                    logging.info('Reprovado Teste 1.6.7- ')
 
                     self.__packet_sniffer_wan.stop()
                     return False
 
                 if pkt.haslayer(EIGRPv6ExtRoute):
                     logging.info(pkt.show())
-                    logging.info('Reprovado Teste 1.6.7- Respondeu ao DHCP6 reconfigure de chave falsa')
+                    logging.info('Reprovado Teste 1.6.7- ')
 
                     self.__packet_sniffer_wan.stop()
                     return False
 
                 if pkt.haslayer(OSPF_Hdr):
                     logging.info(pkt.show())
-                    logging.info('Reprovado Teste 1.6.7- Respondeu ao DHCP6 reconfigure de chave falsa')
+                    logging.info('Reprovado Teste 1.6.7- ')
 
                     self.__packet_sniffer_wan.stop()
                     return False
                 if pkt.haslayer(OSPF_Hello):
                     logging.info(pkt.show())
-                    logging.info('Reprovado Teste 1.6.7- Respondeu ao DHCP6 reconfigure de chave falsa')
+                    logging.info('Reprovado Teste 1.6.7- ')
 
                     self.__packet_sniffer_wan.stop()
                     return False
                 if pkt.haslayer(OSPFv3_Hdr):
                     logging.info(pkt.show())
-                    logging.info('Reprovado Teste 1.6.7- Respondeu ao DHCP6 reconfigure de chave falsa')
+                    logging.info('Reprovado Teste 1.6.7-')
 
                     self.__packet_sniffer_wan.stop()
                     return False
                 if pkt.haslayer(OSPFv3_Hello):
                     logging.info(pkt.show())
-                    logging.info('Reprovado Teste 1.6.7- Respondeu ao DHCP6 reconfigure de chave falsa')
+                    logging.info('Reprovado Teste 1.6.7- ')
 
                     self.__packet_sniffer_wan.stop()
                     return False
                 if pkt.haslayer(OSPFv3_Router_LSA):
                     logging.info(pkt.show())
-                    logging.info('Reprovado Teste 1.6.7- Respondeu ao DHCP6 reconfigure de chave falsa')
+                    logging.info('Reprovado Teste 1.6.7- ')
                     self.__packet_sniffer_wan.stop()
                     return False
 
                 elif time_over :
                     if not sent_reconfigure:
                         self.__packet_sniffer_wan.stop()
-                        logging.info('Falha: Teste 1.6.7- Tempo finalizado mas Não Enviou DHCP Reconfigure')
+                        logging.info('Falha: Teste 1.6.7-')
 
                         return False
                     else:

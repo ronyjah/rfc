@@ -26,7 +26,7 @@ class PacketSniffer(Thread):
         self.__AsySnif = AsyncSniffer(iface=self.__interface,prn=self.PacketHandler)
         #sniff(iface=self.__interface,prn=self.PacketHandler)
 
-        Thread(target=PacketSniffer.init(self),name=name)
+        Thread(target=PacketSniffer.init(self),setName=name)
 
     #def create(self):
         #self.__AsySnif = AsyncSniffer(iface=self.__interface,prn=self.PacketHandler)
@@ -43,7 +43,7 @@ class PacketSniffer(Thread):
     #def run(self):
         #print('run')
         #self.create()
-        #   print (threading.currentThread().getName(), 'Run')
+        p#rint (threading.currentThread().getName(), 'Run')
         #logging.info('Run')
         #sniff(iface=self.__interface,prn=self.PacketHandler)
         # if stop():
@@ -60,6 +60,7 @@ class PacketSniffer(Thread):
 
     def PacketHandler(self,pkt):
         if pkt.haslayer(IPv6):
+            print (threading.currentThread().getName(), 'Run')
             self.put_queue(pkt)
 
 

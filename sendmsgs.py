@@ -144,8 +144,46 @@ class SendMsgs:
 
         return DHCP6OptClientId(duid=test.get_client_duid())#b'\x00\x01\x00\x01\xc7\x92\xbc\x9a\x00\xe0\x4c\x86\x70\x3c')
 
-    def dhcp_server_id(self,test=None):
+    def dhcp_information(self,test=None):
+        return DHCP6_InfoRequest(trid=test.get_xid())
 
+    def elapsedtime(self,test=None):
+        # >>> ls(DHCP6OptElapsedTime)                                                                                                                                                         
+        # optcode    : ShortEnumField                      = (8)
+        # optlen     : ShortField                          = (2)
+        # elapsedtime : _ElapsedTimeField                   = (0)
+        return DHCP6OptElapsedTime(elapsedtime= test.get_elapsetime())
+    def client_fqdn(self,test=None):
+        # >>> ls(DHCP6OptClientFQDN)                                                                                                                                                          
+        # optcode    : ShortEnumField                      = (39)
+        # optlen     : FieldLenField                       = (None)
+        # res        : BitField  (5 bits)                  = (0)
+        # flags      : FlagsField  (3 bits)                = (<Flag 0 ()>)
+        # fqdn       : DNSStrField                         = (b'.')
+        return DHCP6OptClientFQDN(fdqn= test.get_fdqn())
+    def opt_vendor_class(self,test=None):
+        # >>> ls(DHCP6OptVendorClass)                                                                                                                                                         
+        # optcode    : ShortEnumField                      = (16)
+        # optlen     : FieldLenField                       = (None)
+        # enterprisenum : IntEnumField                        = (None)
+        # vcdata     : _VendorClassDataField               = ([])
+        return DHCP6OptVendorClass(vdata = test.get_vendor_class() ,\
+                                   enterprisenum= test.get_enterprise())
+
+
+
+    def opt_req(self,test=None):
+        #>>> ls(DHCP6OptOptReq)                                                                                                                                                                                                                                                          
+        # optcode    : ShortEnumField                      = (6)
+        # optlen     : FieldLenField                       = (None)
+        # reqopts    : _OptReqListField                    = ([23, 24])
+
+        return DHCP6OptOptReq(reqopts=[17,23,24,32])
+
+    def dhcp_solicit(self,test=None):
+        return DHCP6_Solicit(trid=test.get_xid())
+
+    def dhcp_server_id(self,test=None):
         #return DHCP6OptServerId(duid=test.get_server_duid())
         return DHCP6OptServerId(duid=b'\x00\x01\x00\x01\x1f\xef\x03\x96\x44\x87\xfc\xba\x75\x46')
     def opt_ia_na(self,test=None):
@@ -185,6 +223,8 @@ class SendMsgs:
                                                         preflft = int(self.__config.get('setup1-1_advertise','ia_pd_pref_lifetime')),\
                                                         validlft = int(self.__config.get('setup1-1_advertise','ia_pd_validtime')),\
                                                         plen= int(self.__config.get('setup1-1_advertise','ia_pd_pref_len'))))
+
+
 
     def opt_dns_server(self):
         return DHCP6OptDNSServers(dnsservers=[self.__config.get('setup1-1_advertise','dns_rec_name_server')])
@@ -425,3 +465,68 @@ class SendMsgs:
             self.dhcp_reconfigure(fields)/\
             self.dhcp_auth(),\
             iface=self.__wan_device_tr1,inter=1)
+
+
+
+
+    def send_dhcp_information(self,fields=None):
+        #sendp(Ether()/IPv6()/UDP()/DHCP6_Advertise()/DHCP6OptClientId()/DHCP6OptServerId()/DHCP6OptIA_NA()/DHCP6OptIA_PD()/DHCP6OptDNSServers()/DHCP6OptDNSDomains(),iface='lo')
+        sendp(self.ether(fields)/\
+            self.ipv6(fields)/\
+            self.udp()/\
+            self.dhcp_information(fields)/\
+            self.elapsedtime()/\
+            self.dhcp_client_id(fields)/\
+            self.client_fqdn(fields)/\
+            #self.dhcp_server_id(fields)/\
+            self.opt_vendor_class(fields)/\
+            self.opt_ia_na(fields)/\
+            self.opt_req(fields),\
+            iface=fields.get_lan_device(),inter=1)            
+
+
+    def send_dhcp_solicit_ia_na(self,fields=None):
+        #sendp(Ether()/IPv6()/UDP()/DHCP6_Advertise()/DHCP6OptClientId()/DHCP6OptServerId()/DHCP6OptIA_NA()/DHCP6OptIA_PD()/DHCP6OptDNSServers()/DHCP6OptDNSDomains(),iface='lo')
+        sendp(self.ether(fields)/\
+            self.ipv6(fields)/\
+            self.udp()/\
+            self.dhcp_solicit(fields)/\
+            self.elapsedtime()/\
+            self.dhcp_client_id(fields)/\
+            self.client_fqdn(fields)/\
+            #self.dhcp_server_id(fields)/\
+            self.opt_vendor_class(fields)/\
+            self.opt_ia_na(fields)/\
+            self.opt_req(fields),\
+            
+            #self.opt_ia_pd(fields)/\
+            #self.opt_dns_server()/\
+            #self.opt_dns_domain(),\
+            iface=fields.get_lan_device(),inter=1)
+
+
+# >>> ls(DHCP6OptVendorClass)                                                                                                                                                         
+# optcode    : ShortEnumField                      = (16)
+# optlen     : FieldLenField                       = (None)
+# enterprisenum : IntEnumField                        = (None)
+# vcdata     : _VendorClassDataField               = ([])
+
+
+#>>> ls(DHCP6OptOptReq)                                                                                                                                                                                                                                                          
+# optcode    : ShortEnumField                      = (6)
+# optlen     : FieldLenField                       = (None)
+# reqopts    : _OptReqListField                    = ([23, 24])
+
+# >>> ls(DHCP6OptClientFQDN)                                                                                                                                                          
+# optcode    : ShortEnumField                      = (39)
+# optlen     : FieldLenField                       = (None)
+# res        : BitField  (5 bits)                  = (0)
+# flags      : FlagsField  (3 bits)                = (<Flag 0 ()>)
+# fqdn       : DNSStrField                         = (b'.')
+
+
+# >>> ls(DHCP6OptElapsedTime)                                                                                                                                                         
+# optcode    : ShortEnumField                      = (8)
+# optlen     : ShortField                          = (2)
+# elapsedtime : _ElapsedTimeField                   = (0)
+
