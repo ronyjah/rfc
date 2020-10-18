@@ -9,7 +9,7 @@ import argparse
 from scapy.all import *
 from config import Config
 import time
-
+import pdb
 format = "%(asctime)s: %(message)s [%(levelname)s] (%(threadName)-9s)"
 logging.basicConfig(format=format, level=logging.DEBUG,
                     datefmt="%H:%M:%S")
@@ -26,7 +26,7 @@ class PacketSniffer(Thread):
         self.__AsySnif = AsyncSniffer(iface=self.__interface,prn=self.PacketHandler)
         #sniff(iface=self.__interface,prn=self.PacketHandler)
 
-        Thread(target=PacketSniffer.init(self),setName=name)
+        Thread(target=PacketSniffer.init(self),name=name)
 
     #def create(self):
         #self.__AsySnif = AsyncSniffer(iface=self.__interface,prn=self.PacketHandler)
@@ -38,12 +38,15 @@ class PacketSniffer(Thread):
         self.__AsySnif.start()
     def stop(self):
         logging.info('AsyncSniffer stop')
+
+        #pdb.set_trace()
         self.__AsySnif.stop()
+
 
     #def run(self):
         #print('run')
         #self.create()
-        p#rint (threading.currentThread().getName(), 'Run')
+        #Print (threading.currentThread().getName(), 'Run')
         #logging.info('Run')
         #sniff(iface=self.__interface,prn=self.PacketHandler)
         # if stop():

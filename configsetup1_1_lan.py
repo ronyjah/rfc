@@ -15,7 +15,7 @@ from sendmsgs import SendMsgs
 
 class ConfigSetup1_1_Lan:
 
-    def __init__(self,config):
+    def __init__(self,config,interface):
         #self.__queue_wan = Queue()
         #self.__queue_lan = Queue()
         #logging.info('self.__queue_size_inicio162')
@@ -65,7 +65,7 @@ class ConfigSetup1_1_Lan:
         self.__r_lifetime_CeRouter =None
         self.__rdnss_dns_CeRouter =None
         self.__rdnss_lifetime_CeRouter  =None
-         self.__domainname =None
+        self.__domainname =None
         self.__domainname_lifetime_CeRouter  =None
         self.__linklayer_CeRouter = None
 
@@ -83,11 +83,12 @@ class ConfigSetup1_1_Lan:
         self.__link_local_addr = self.__config.get('wan','link_local_addr')
         self.__all_nodes_addr = self.__config.get('multicast','all_nodes_addr')
         self.__test_desc = self.__config.get('tests','1.6.2b')
-        self.__elapsetime.
-        self.__fdqn
-        self.__vendor_class
-        self.__enterprise
-        self.opt_req
+        self.__elapsetime = None
+        self.__fdqn = None
+        self.__vendor_class = None
+        self.__enterprise = None
+        self.opt_req = None
+        self.send_solicit = False
         #self.__packet_sniffer.daemon=True
 
 
@@ -174,7 +175,7 @@ class ConfigSetup1_1_Lan:
         return self.__setup1_1_OK
 
     def get_elapsetime(self):
-        return self.__elapsetime
+        return int(self.__elapsetime)
 
     def set_elapsetime(self,valor):
         self.__elapsetime = valor
@@ -192,7 +193,7 @@ class ConfigSetup1_1_Lan:
         self.__vendor_class = valor
 
     def get_enterprise(self):
-        return self.__enterprise
+        return int(self.__enterprise)
 
     def set_enterprise(self,valor):
         self.__enterprise = valor 
@@ -335,7 +336,7 @@ class ConfigSetup1_1_Lan:
         self.__iaid = valor
 
     def get_iaid(self):
-        return self.__iaid
+        return int(self.__iaid,16)
     
     def get_local_ping(self):
         return self.__local_ping_OK
@@ -363,28 +364,28 @@ class ConfigSetup1_1_Lan:
         if self.__disapproved:
             return False
 
-        if not send_solicit:
+        if not self.send_solicit:
             self.set_ipv6_src(self.__config.get('solicitlan','ip'))
             self.set_ether_src(self.__config.get('solicitlan','mac'))
             self.set_ether_dst(self.__config.get('multicast','all_mac_routers'))
             self.set_ipv6_dst(self.__config.get('multicast','all_routers_addr'))
-            self.set_elapsetime(self.__config.get('solicitlan','elapsetime')))
-            self.set_client_duid(self.__config.get('solicitlan','duid')))
-            self.set_fdqn(self.__config.get('solicitlan','clientfqdn'))
+            #self.set_elapsetime(self.__config.get('solicitlan','elapsetime'))
+            #self.set_client_duid(self.__config.get('solicitlan','duid'))
+            #self.set_fdqn(self.__config.get('solicitlan','clientfqdn'))
             self.__sendmsgssetup1_1.send_dhcp_solicit_ia_na(self)
-            send_solicit = True
+            self.send_solicit = False
             return
-        if send_solicit:
-            self.set_ipv6_src(self.__config.get('informationlan','ip'))
-            self.set_ether_src(self.__config.get('informationlan','mac'))
-            self.set_ether_dst(self.__config.get('multicast','all_mac_routers'))
-            self.set_ipv6_dst(self.__config.get('multicast','all_routers_addr'))
-            self.set_elapsetime(self.__config.get('solicitlan','elapsetime')))
-            self.set_client_duid(self.__config.get('solicitlan','duid')))
-            self.set_fdqn(self.__config.get('solicitlan','clientfqdn'))
-            self.__sendmsgssetup1_1.send_dhcp_solicit_ia_na(self)
-            send_solicit = True
-            return
+        # if self.send_solicit:
+        #     self.set_ipv6_src(self.__config.get('informationlan','ip'))
+        #     self.set_ether_src(self.__config.get('informationlan','mac'))
+        #     self.set_ether_dst(self.__config.get('multicast','all_mac_routers'))
+        #     self.set_ipv6_dst(self.__config.get('multicast','all_routers_addr'))
+        #     self.set_elapsetime(self.__config.get('solicitlan','elapsetime'))
+        #     self.set_client_duid(self.__config.get('solicitlan','duid'))
+        #     self.set_fdqn(self.__config.get('solicitlan','clientfqdn'))
+        #     self.__sendmsgssetup1_1.send_dhcp_solicit_ia_na(self)
+        #     self.send_solicit = True
+        #     #return
 
         if pkt.haslayer(ICMPv6ND_RA):
             if pkt.haslayer(ICMPv6NDOptPrefixInfo):

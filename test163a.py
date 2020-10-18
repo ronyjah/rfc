@@ -36,10 +36,24 @@ class Test163a:
         self.__test_desc = self.__config.get('tests','1.6.3a')
         
 
+    def set_flags(self):
+        self.__config_setup1_1.set_flag_M(self.__config.get('t1.6.3','flag_m'))
+        self.__config_setup1_1.set_flag_0(self.__config.get('t1.6.3','flag_o'))
+        self.__config_setup1_1.set_flag_chlim(self.__config.get('t1.6.3','flag_chlim'))
+        self.__config_setup1_1.set_flag_L(self.__config.get('t1.6.3','flag_l'))
+        self.__config_setup1_1.set_flag_A(self.__config.get('t1.6.3','flag_a'))
+        self.__config_setup1_1.set_flag_R(self.__config.get('t1.6.3','flag_r'))
+        self.__config_setup1_1.set_flag_prf(self.__config.get('t1.6.3','flag_prf'))
+        self.__config_setup1_1.set_validlifetime(self.__config.get('t1.6.3','validlifetime'))
+        self.__config_setup1_1.set_preferredlifetime(self.__config.get('t1.6.3','preferredlifetime'))
+        self.__config_setup1_1.set_routerlifetime(self.__config.get('t1.6.3','routerlifetime'))
+        self.__config_setup1_1.set_intervalo(self.__config.get('t1.6.3','intervalo'))
+
+
     def run(self):
         self.__packet_sniffer_wan = PacketSniffer('test163a',self.__queue_wan,self,self.__config,self.__wan_device_tr1)
         self.__packet_sniffer_wan.start()
-        self.__config_setup1_1.flags_partA()
+        self.set_flags()
         logging.info(self.__test_desc)
         t_test = 0
 

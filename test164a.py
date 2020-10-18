@@ -71,6 +71,7 @@ class Test164a:
         send_ra = False
         send_ns =False
         send_ra2 = False
+        send_ra_M_1 =False
         while not self.__queue_wan.full():
             while self.__queue_wan.empty():
                 if t_test < 60:
@@ -121,24 +122,36 @@ class Test164a:
                     self.__sendmsgs.send_icmp_ns(self.__config_setup1_1)
                     send_ns = True
                     continue
-            if pkt.haslayer(DHCP6_Solicit) and send_ns:       
-              
-                self.__config_setup1_1.set_ether_src(self.__config.get('wan','ra_mac'))
-                self.__config_setup1_1.set_ether_dst(self.__config.get('multicast','all_mac_nodes'))
-                self.__config_setup1_1.set_ipv6_src(self.__config.get('wan','link_local_addr'))
-                self.__config_setup1_1.set_ipv6_dst(self.__config.get('multicast','all_nodes_addr'))
-                self.__sendmsgs.send_tr1_RA(self.__config_setup1_1)
-                send_ra = True
-                continue
+            if pkt.haslayer(DHCP6_Solicit) and send_ns and not send_ra_M_1 :       
+                if not send_ra_M_1:
+                    self.__config_setup1_1.set_ether_src(self.__config.get('wan','ra_mac'))
+                    self.__config_setup1_1.set_ether_dst(self.__config.get('multicast','all_mac_nodes'))
+                    self.__config_setup1_1.set_ipv6_src(self.__config.get('wan','link_local_addr'))
+                    self.__config_setup1_1.set_ipv6_dst(self.__config.get('multicast','all_nodes_addr'))
+                    self.__sendmsgs.send_tr1_RA(self.__config_setup1_1)
+                    send_ra = True
+                    send_ra_M_1 = True
+                    continue
+
                     #self.set_ether_dst(pkt[Ether].src)
 
-            if send_ra:
+            if send_ra_M_1 and not send_ra2:
                 if pkt.haslayer(DHCP6_Solicit):
-                    if pkt.haslayer(DHCP6OptIA_NA):
                     
+
+
+
                         self.__config_setup1_1.set_flag_M("0")
+                        self.__config_setup1_1.set_ether_src(self.__config.get('wan','ra_mac'))
+                        self.__config_setup1_1.set_ether_dst(self.__config_setup1_1.get_mac_ceRouter())
+                        self.__config_setup1_1.set_ipv6_src(self.__config.get('wan','link_local_addr'))
+                        self.__config_setup1_1.set_ipv6_dst(self.__config_setup1_1.get_local_addr_ceRouter())
                         self.__sendmsgs.send_tr1_RA(self.__config_setup1_1)
                         send_ra2 = True
+                        continue
+            if send_ra2:
+                if pkt.haslayer(DHCP6_Solicit):
+                    if pkt.haslayer(DHCP6OptIA_NA):
                         return True
             #if pkt.haslayer(DHCP6_Solicit) and send_ra2: 
 

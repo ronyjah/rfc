@@ -29,7 +29,7 @@ class Test271a:
         self.__local_addr_ceRouter =None
         self.__sendmsgs = SendMsgs(self.__config)
         self.__config_setup1_1 = ConfigSetup1_1(self.__config)
-        self.__config_setup_lan = ConfigSetup1_1_Lan(self.__config)
+        #self.__config_setup_lan = ConfigSetup1_1_Lan(self.__config)
         self.__wan_device_tr1 = self.__config.get('wan','device_wan_tr1')
         self.__lan_device = self.__config.get('lan','lan_device')
         self.__wan_mac_tr1 = self.__config.get('wan','wan_mac_tr1')
@@ -39,13 +39,41 @@ class Test271a:
         self.__t_lan = None
         self.__config_setup_lan = ConfigSetup1_1_Lan(self.__config,self.__lan_device)
 
+    def set_flags(self):
+        self.__config_setup1_1.set_flag_M(self.__config.get('t1.6.6b','flag_m'))
+        self.__config_setup1_1.set_flag_0(self.__config.get('t1.6.6b','flag_o'))
+        self.__config_setup1_1.set_flag_chlim(self.__config.get('t1.6.6b','flag_chlim'))
+        self.__config_setup1_1.set_flag_L(self.__config.get('t1.6.6b','flag_l'))
+        self.__config_setup1_1.set_flag_A(self.__config.get('t1.6.6b','flag_a'))
+        self.__config_setup1_1.set_flag_R(self.__config.get('t1.6.6b','flag_r'))
+        self.__config_setup1_1.set_flag_prf(self.__config.get('t1.6.6b','flag_prf'))
+        self.__config_setup1_1.set_validlifetime(self.__config.get('t1.6.6b','validlifetime'))
+        self.__config_setup1_1.set_preferredlifetime(self.__config.get('t1.6.6b','preferredlifetime'))
+        self.__config_setup1_1.set_routerlifetime(self.__config.get('t1.6.6b','routerlifetime'))
+        self.__config_setup1_1.set_intervalo(self.__config.get('t1.6.6b','intervalo'))    
 
-    def runLan():
-        self.__config_setup_lan_.flags_partA()
+
+    def set_flags_lan(self):
+        self.__config_setup_lan.set_elapsetime(self.__config.get('solicitlan','elapsetime'))
+        self.__config_setup_lan.set_xid(self.__config.get('solicitlan','xid'))
+        self.__config_setup_lan.set_fdqn(self.__config.get('solicitlan','clientfqdn'))
+        self.__config_setup_lan.set_vendor_class(self.__config.get('solicitlan','vendorclass'))
+        #self.__config_setup_lan.set_t1(self.__config.get('solicitlan','elapsetime'))
+        #self.__config_setup_lan.set_t2(self.__config.get('solicitlan','elapsetime'))
+        self.__config_setup_lan.set_enterprise(self.__config.get('solicitlan','enterpriseid'))
+        self.__config_setup_lan.set_client_duid(self.__config.get('solicitlan','duid'))
+        self.__config_setup_lan.set_iaid(self.__config.get('solicitlan','iaid'))
+
+        
+
+
+    def run_Lan(self):
+        #self.__config_setup_lan_.flags_partA()
         logging.info('Thread da LAN')
         t_test = 0
         sent_reconfigure = False
         time_over = False
+        self.set_flags_lan()
         while not self.__queue_lan.full():
             while self.__queue_lan.empty():
                 if t_test < 60:
@@ -62,9 +90,22 @@ class Test271a:
                     logging.info('Reprovado Teste 2.7.1.a - Falha em completar o Common Setup 1.1 da RFC')
                     self.__packet_sniffer_wan.stop() 
                     return False       
+    def set_flags(self):
+        self.__config_setup1_1.set_flag_M(self.__config.get('t1.6.6b','flag_m'))
+        self.__config_setup1_1.set_flag_0(self.__config.get('t1.6.6b','flag_o'))
+        self.__config_setup1_1.set_flag_chlim(self.__config.get('t1.6.6b','flag_chlim'))
+        self.__config_setup1_1.set_flag_L(self.__config.get('t1.6.6b','flag_l'))
+        self.__config_setup1_1.set_flag_A(self.__config.get('t1.6.6b','flag_a'))
+        self.__config_setup1_1.set_flag_R(self.__config.get('t1.6.6b','flag_r'))
+        self.__config_setup1_1.set_flag_prf(self.__config.get('t1.6.6b','flag_prf'))
+        self.__config_setup1_1.set_validlifetime(self.__config.get('t1.6.6b','validlifetime'))
+        self.__config_setup1_1.set_preferredlifetime(self.__config.get('t1.6.6b','preferredlifetime'))
+        self.__config_setup1_1.set_routerlifetime(self.__config.get('t1.6.6b','routerlifetime'))
+        self.__config_setup1_1.set_intervalo(self.__config.get('t1.6.6b','intervalo'))    
+
 
     def run(self):
-        self.__t_lan =  Thread(target=self.run_lan,setName='LAN_Thread')
+        self.__t_lan =  Thread(target=self.run_Lan,name='LAN_Thread')
         self.__t_lan.start()
         
         self.__packet_sniffer_wan = PacketSniffer('Test271a-WAN',self.__queue_wan,self,self.__config,self.__wan_device_tr1)
@@ -73,7 +114,7 @@ class Test271a:
         self.__packet_sniffer_lan = PacketSniffer('Test271a-LAN',self.__queue_lan,self,self.__config,self.__lan_device)
         self.__packet_sniffer_lan.start()
         
-        self.__config_setup1_1.flags_partA()
+        self.set_flags()
         logging.info(self.__test_desc)
         t_test = 0
         sent_reconfigure = False
@@ -97,34 +138,35 @@ class Test271a:
                     return False
 
             else: 
+                print('WAN - Concluido')
+                continue
 
+                # if pkt.haslayer(DHCP6_Renew):
+                #     logging.info(pkt.show())
+                #     logging.info('Reprovado Teste 2.7.1.a - Respondeu ao DHCP6 reconfigure de chave falsa')
 
-                if pkt.haslayer(DHCP6_Renew):
-                    logging.info(pkt.show())
-                    logging.info('Reprovado Teste 2.7.1.d - Respondeu ao DHCP6 reconfigure de chave falsa')
+                #     self.__packet_sniffer_wan.stop()
+                #     return False
+                # elif time_over :
+                #     if not sent_reconfigure:
+                #         self.__packet_sniffer_wan.stop()
+                #         logging.info('Falha: Teste 2.7.1.a. Tempo finalizado mas Não Enviou DHCP Reconfigure')
 
-                    self.__packet_sniffer_wan.stop()
-                    return False
-                elif time_over :
-                    if not sent_reconfigure:
-                        self.__packet_sniffer_wan.stop()
-                        logging.info('Falha: Teste 2.7.1.a. Tempo finalizado mas Não Enviou DHCP Reconfigure')
+                #         return False
+                #     else:
+                #         self.__packet_sniffer_wan.stop() 
+                #         logging.info('Aprovado: Teste 2.7.1.a. Tempo finalizado e não recebeu DHCP Renew em DHCP Reconf adulterado')
 
-                        return False
-                    else:
-                        self.__packet_sniffer_wan.stop() 
-                        logging.info('Aprovado: Teste 2.7.1.a. Tempo finalizado e não recebeu DHCP Renew em DHCP Reconf adulterado')
+                #         return True
+                # if not sent_reconfigure:
 
-                        return True
-                if not sent_reconfigure:
-
-                    self.__config_setup1_1.set_ipv6_src(self.__config.get('wan','link_local_addr'))
-                    self.__config_setup1_1.set_ipv6_dst(self.__config.get('multicast','dhcp_relay_agents_and_servers_addr'))
-                    self.__config_setup1_1.set_ether_src(self.__config.get('wan','link_local_mac'))
-                    self.__config_setup1_1.set_ether_dst(self.__config_setup1_1.get_ether_dst())
-                    self.__config_setup1_1.set_dhcp_reconf_type(self.__config.get('t2.7.1','msg_type'))
-                    self.__sendmsgs.send_dhcp_reconfigure_wrong(self.__config_setup1_1)
-                    sent_reconfigure = True
+                #     self.__config_setup1_1.set_ipv6_src(self.__config.get('wan','link_local_addr'))
+                #     self.__config_setup1_1.set_ipv6_dst(self.__config.get('multicast','dhcp_relay_agents_and_servers_addr'))
+                #     self.__config_setup1_1.set_ether_src(self.__config.get('wan','link_local_mac'))
+                #     self.__config_setup1_1.set_ether_dst(self.__config_setup1_1.get_ether_dst())
+                #     self.__config_setup1_1.set_dhcp_reconf_type(self.__config.get('t2.7.1','msg_type'))
+                #     self.__sendmsgs.send_dhcp_reconfigure_wrong(self.__config_setup1_1)
+                #     sent_reconfigure = True
             
 
                 # if pkt.haslayer(DHCP6_Solicit):

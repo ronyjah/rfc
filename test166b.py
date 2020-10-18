@@ -121,24 +121,24 @@ class Test166b:
                     self.__sendmsgs.send_icmp_ns(self.__config_setup1_1)
                     send_ns = True
                     continue
-            if send_ns:       
-                self.__config_setup1_1.set_flag_M("0")
-                self.__config_setup1_1.set_flag_0("0")
-                self.__config_setup1_1.set_ether_src(self.__config.get('wan','ra_mac'))
-                self.__config_setup1_1.set_ether_dst(self.__config.get('multicast','all_mac_nodes'))
-                self.__config_setup1_1.set_ipv6_src(self.__config.get('wan','link_local_addr'))
-                self.__config_setup1_1.set_ipv6_dst(self.__config.get('multicast','all_nodes_addr'))
-                self.__sendmsgs.send_tr1_RA(self.__config_setup1_1)
-                send_ra = True
-                continue
+                if send_ns and not send_ra:       
+                    self.__config_setup1_1.set_flag_M("0")
+                    self.__config_setup1_1.set_flag_0("0")
+                    self.__config_setup1_1.set_ether_src(self.__config.get('wan','ra_mac'))
+                    self.__config_setup1_1.set_ether_dst(self.__config.get('multicast','all_mac_nodes'))
+                    self.__config_setup1_1.set_ipv6_src(self.__config.get('wan','link_local_addr'))
+                    self.__config_setup1_1.set_ipv6_dst(self.__config.get('multicast','all_nodes_addr'))
+                    self.__sendmsgs.send_tr1_RA(self.__config_setup1_1)
+                    send_ra = True
+                    continue
                     #self.set_ether_dst(pkt[Ether].src)
 
-
-            if pkt.haslayer(DHCP6_Solicit):
-                if pkt.haslayer(DHCP6OptIA_NA):
-                    return True
-                else:
-                    return False 
+                if send_ra:
+                    if pkt.haslayer(DHCP6_Solicit):
+                        if pkt.haslayer(DHCP6OptIA_NA):
+                            return True
+                        else:
+                            return False 
 
             #if pkt.haslayer(DHCP6_Solicit) and send_ra2: 
 
