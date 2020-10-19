@@ -51,6 +51,7 @@ class ConfigSetup1_1:
         self.__local_ping_OK = False
         self.__global_ns_ok = False
         self.__dhcp_ok = False
+        self.__active_DHCP_no_IA_PD = False
         self.__iaid = None
         self.__mac_cerouter = None
         self.__flag_prf = None
@@ -59,6 +60,11 @@ class ConfigSetup1_1:
         self.__disapproved = False
         self.__dhcp_reconf_type = None
         self.__local_addr_ceRouter =None
+        self.__dhcp_t1 = None
+        self.__dhcp_t2 = None   
+        self.__dhcp_preflft = None
+        self.__dhcp_plen = None
+        self.__dhcp_validlft = None
         self.__sendmsgssetup1_1 = SendMsgs(self.__config)
         self.__wan_device_tr1 = self.__config.get('wan','device_wan_tr1')
         self.__wan_mac_tr1 = self.__config.get('wan','wan_mac_tr1')
@@ -71,6 +77,10 @@ class ConfigSetup1_1:
 
     #recebe o pacote
     #packetSniffer return pkt
+
+    def active_DHCP_no_IA_PD(self):
+        self.__active_DHCP_no_IA_PD = True
+
     def get_setup1_1_OK(self):
         return self.__setup1_1_OK
 
@@ -291,7 +301,33 @@ class ConfigSetup1_1:
     def set_udp_dport(self,valor):
         self.udp_dport = valor
 
+    def set_pd_prefixlen(self,valor):
+        self.__pd_prefixlen = valor
 
+    def get_pd_prefixlen(self):
+        return int(self.__pd_prefixlen)
+
+    def set_dhcp_t1(self,valor):
+        self.__dhcp_t1 = valor
+    def set_dhcp_t2(self,valor):
+        self.__dhcp_t2 = valor   
+    def set_dhcp_preflft(self,valor):
+        self.__dhcp_preflft = valor
+    def set_dhcp_plen(self,valor):
+        self.__dhcp_plen = valor
+    def set_dhcp_validlft(self,valor):
+        self.__dhcp_validlft = valor
+
+    def get_dhcp_t1(self):
+        return int(self.__dhcp_t1)
+    def get_dhcp_t2(self):
+        return int(self.__dhcp_t2)   
+    def get_dhcp_preflft(self):
+        return int(self.__dhcp_preflft)
+    def get_dhcp_plen(self):
+        return int(self.__dhcp_plen)
+    def get_dhcp_validlft(self):
+        return int(self.__dhcp_validlft)
     
     def run_setup1_1(self,pkt):
 
@@ -440,21 +476,23 @@ class ConfigSetup1_1:
             #self.set_tgt(self.get_local_addr_ceRouter())
             self.__sendmsgssetup1_1.send_echo_request(self)  
             self.__ND_local_OK = True
-            return
+            #return
         else:
             #self.__ND_local_OK = True
-            print('enviou ICMP NA')
+            print('enviou ICMP NS')
             if not  self.__local_ping_OK:
                 self.set_ipv6_src(self.__config.get('wan','link_local_addr'))
                 self.set_ipv6_dst(self.__config.get('multicast','all_nodes_addr'))
                 self.set_ether_src(self.__config.get('wan','link_local_mac'))
                 self.set_ether_dst(self.__config.get('multicast','all_mac_nodes'))
                 #self.set_tgt(self.get_local_addr_ceRouter())
+                
                 self.set_tgt(self.get_local_addr_ceRouter())
                 #self.__sendmsgssetup1_1.send_echo_request(self)
                 self.set_lla(self.__config.get('wan','link_local_mac'))
                 self.__sendmsgssetup1_1.send_icmp_ns(self)
-                return
+                #return
+        print('POS SEND ICMP')
             # if pkt[ICMPv6ND_NS].tgt == self.__config.get('wan','ra_address'):
             #     print('00001')
             #     if pkt[IPv6].src == self.__config.get('wan','link_local_addr'):
@@ -535,7 +573,10 @@ class ConfigSetup1_1:
                 self.set_ether_dst(self.__config.get('multicast','all_mac_nodes'))
                 self.set_ipv6_src(self.__config.get('wan','ra_address'))
                 self.set_ipv6_dst(self.__config.get('multicast','all_nodes_addr'))
+ #               if not self.__active_RA_no_IA_PD:
                 self.__sendmsgssetup1_1.send_tr1_RA(self)
+ #               else:
+ #                   self.__sendmsgssetup1_1.send_tr1_RA_no_IA_PD(self)
 
 
 
@@ -573,7 +614,7 @@ class ConfigSetup1_1:
         #         self.set_ipv6_dst(self.__config.get('multicast','all_nodes_addr'))
         #         #self.__sendmsgssetup1_1.send_tr1_RA(self)
 
-
+        print('PRE SOLICIT')
         if pkt.haslayer(DHCP6_Solicit) and self.__local_ping_OK:
             logging.info('SEND ADVERTISE 576')
             self.set_xid(pkt[DHCP6_Solicit].trid)
@@ -583,15 +624,20 @@ class ConfigSetup1_1:
             self.set_ether_src(self.__config.get('wan','link_local_mac'))
             self.set_ether_dst(pkt[Ether].src)
             self.set_ipv6_dst(pkt[IPv6].src)
+            self.set_local_addr_ceRouter(pkt[IPv6].src)
+            self.set_mac_ceRouter(pkt[Ether].src)
             # print('local addr')
             # print(self.get_local_addr_ceRouter())
             # print('ether dst')
             # print(self.get_ether_dst())
             self.set_ipv6_src(self.__config.get('wan','link_local_addr'))  
-
-            self.__sendmsgssetup1_1.send_dhcp_advertise(self)
-
-
+            if not self.__active_DHCP_no_IA_PD:
+                self.__sendmsgssetup1_1.send_dhcp_advertise(self)
+            else:
+                self.__sendmsgssetup1_1.send_dhcp_advertise_no_IA_PD(self)
+        elif pkt.haslayer(DHCP6_Solicit):
+            self.set_local_addr_ceRouter(pkt[IPv6].src)
+            self.set_mac_ceRouter(pkt[Ether].src)
         #     if not self.__ND_local_OK:
         #         pass
         #         print('RECEBEU SOLICIT FAIL')

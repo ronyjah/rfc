@@ -18,7 +18,7 @@ format = "%(asctime)s: %(message)s"
 logging.basicConfig(format=format, level=logging.DEBUG,
                     datefmt="%H:%M:%S")
 
-class Test271a:
+class Test271c:
 
     def __init__(self,config):
         self.__queue_wan = Queue()
@@ -35,7 +35,7 @@ class Test271a:
         self.__wan_mac_tr1 = self.__config.get('wan','wan_mac_tr1')
         self.__link_local_addr = self.__config.get('wan','link_local_addr')
         self.__all_nodes_addr = self.__config.get('multicast','all_nodes_addr')
-        self.__test_desc = self.__config.get('tests','2.7.1a')
+        self.__test_desc = self.__config.get('tests','2.7.1c')
         self.__t_lan = None
         self.__config_setup_lan = ConfigSetup1_1_Lan(self.__config,self.__lan_device)
 
@@ -49,16 +49,16 @@ class Test271a:
         self.__config_setup1_1.set_flag_A(self.__config.get('t1.6.6b','flag_a'))
         self.__config_setup1_1.set_flag_R(self.__config.get('t1.6.6b','flag_r'))
         self.__config_setup1_1.set_flag_prf(self.__config.get('t1.6.6b','flag_prf'))
-        self.__config_setup1_1.set_validlifetime(self.__config.get('t2.7.1a','validlifetime'))
-        self.__config_setup1_1.set_preferredlifetime(self.__config.get('t2.7.1a','preferredlifetime'))
+        self.__config_setup1_1.set_validlifetime(self.__config.get('t2.7.1c','validlifetime'))
+        self.__config_setup1_1.set_preferredlifetime(self.__config.get('t2.7.1c','preferredlifetime'))
         self.__config_setup1_1.set_routerlifetime(self.__config.get('t1.6.6b','routerlifetime'))
         self.__config_setup1_1.set_intervalo(self.__config.get('t1.6.6b','intervalo'))   
-
-        self.__config_setup1_1.set_dhcp_t1(self.__config.get('t2.7.1a','dhcp_t1'))
-        self.__config_setup1_1.set_dhcp_t2(self.__config.get('t2.7.1a','dhcp_t2'))
-        self.__config_setup1_1.set_dhcp_preflft(self.__config.get('t2.7.1a','dhcp_preflft'))
-        self.__config_setup1_1.set_dhcp_validlft(self.__config.get('t2.7.1a','dhcp_validlft'))
-        self.__config_setup1_1.set_dhcp_plen(self.__config.get('t2.7.1a','dhcp_plen'))
+  
+        self.__config_setup1_1.set_dhcp_t1(self.__config.get('t2.7.1c','dhcp_t1'))
+        self.__config_setup1_1.set_dhcp_t2(self.__config.get('t2.7.1c','dhcp_t2'))
+        self.__config_setup1_1.set_dhcp_preflft(self.__config.get('t2.7.1c','dhcp_preflft'))
+        self.__config_setup1_1.set_dhcp_validlft(self.__config.get('t2.7.1c','dhcp_validlft'))
+        self.__config_setup1_1.set_dhcp_plen(self.__config.get('t2.7.1c','dhcp_plen'))
 
 
     def set_flags_lan(self):
@@ -105,7 +105,7 @@ class Test271a:
                 preferredlifetime = self.__config_setup_lan.get_preferredlifetime_CeRouter()
                 validlifetime = self.__config_setup_lan.get_validlifetime_CeRouter()
                 if prefrix_pd == 64:
-                    logging.info('Aprovado Teste 2.7.1.a Prefixo IA_PD é tamanho 64')
+                    logging.info('Aprovado Teste 2.7.1c Prefixo IA_PD é tamanho 64')
                     #self.__packet_sniffer_lan.stop()
                     #return True
                 else:                     
@@ -114,7 +114,7 @@ class Test271a:
                     self.__packet_sniffer_lan.stop()
                     return False
 
-                if preferredlifetime < int(self.__config.get('t2.7.1a','preferredlifetime')):
+                if preferredlifetime < int(self.__config.get('t2.7.1c','preferredlifetime')):
                     logging.info(' Teste 2.7.1a: preferredlifetime OK. preferredlifetime dentro do especificado no RA')
                     #self.__packet_sniffer_lan.stop()
                     #return True
@@ -124,16 +124,16 @@ class Test271a:
                     self.__packet_sniffer_lan.stop()
                     return False
 
-                if validlifetime < int(self.__config.get('t2.7.1a','validlifetime')):
+                if validlifetime < int(self.__config.get('t2.7.1c','validlifetime')):
                     logging.info('Teste 2.7.1a: preferredlifetime OK. validlifetime dentro do especificado no RA')
                     #self.__packet_sniffer_lan.stop()
                     #return True
                 else:                     
-                    logging.info('Reprovado Teste 2.7.1a. validlifetime acima do especificado no RA')
+                    logging.info('Reprovado Teste 2.7.1c. validlifetime acima do especificado no RA')
                     logging.info(validlifetime)
                     self.__packet_sniffer_lan.stop()
                     return False
-                logging.info('Aprovado Teste 2.7.1a.')
+                logging.info('Aprovado Teste 2.7.1b.')
                 self.__packet_sniffer_lan.stop()
                 return True
                 
@@ -146,10 +146,10 @@ class Test271a:
         self.__t_lan =  Thread(target=self.run_Lan,name='LAN_Thread')
         self.__t_lan.start()
         
-        self.__packet_sniffer_wan = PacketSniffer('Test271a-WAN',self.__queue_wan,self,self.__config,self.__wan_device_tr1)
+        self.__packet_sniffer_wan = PacketSniffer('Test271b-WAN',self.__queue_wan,self,self.__config,self.__wan_device_tr1)
         self.__packet_sniffer_wan.start()
         
-        self.__packet_sniffer_lan = PacketSniffer('Test271a-LAN',self.__queue_lan,self,self.__config,self.__lan_device)
+        self.__packet_sniffer_lan = PacketSniffer('Test271b-LAN',self.__queue_lan,self,self.__config,self.__lan_device)
         test_lan = self.__packet_sniffer_lan.start()
         
         self.set_flags()
@@ -159,7 +159,7 @@ class Test271a:
         time_over = False
         #time.sleep(11111)
         finish_wan = True
-        self.__config_setup1_1.set_pd_prefixlen(self.__config.get('t2.7.1a','pd_prefixlen')) 
+        self.__config_setup1_1.set_pd_prefixlen(self.__config.get('t2.7.1b','pd_prefixlen')) 
         while not self.__queue_wan.full():
             while self.__queue_wan.empty():
                 if t_test < 60:
@@ -174,7 +174,7 @@ class Test271a:
                 if not self.__config_setup1_1.get_disapproved():
                     self.__config_setup1_1.run_setup1_1(pkt)
                 else:
-                    logging.info('Reprovado Teste 2.7.1.a - Falha em completar o Common Setup 1.1 da RFC')
+                    logging.info('Reprovado Teste 2.7.1b - Falha em completar o Common Setup 1.1 da RFC')
                     self.__packet_sniffer_wan.stop() 
                     return False
 

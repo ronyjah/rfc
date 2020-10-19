@@ -80,84 +80,20 @@ class SendMsgs:
     #     self.__intervalo = test_flags.get_interval()
 #sendp(Ether()/IPv6()/UDP()/DHCP6_Advertise()/DHCP6OptClientId()/DHCP6OptServerId()/DHCP6OptIA_NA()/DHCP6OptIA_PD()/DHCP6OptDNSServers()/DHCP6OptDNSDomains(),iface='lo')
 # TR1 transmits a Router Advertisement to the all-nodes multicast address with the M and O Flag
-    def ether(self,test=None):
-        #print('etheraddres')
-        #print (test.get_ether_dst())
-        return Ether(src= test.get_ether_src() if test else self.__wan_mac_tr1,\
-                dst = test.get_ether_dst() if test else None)
-
-    def ipv6(self,test=None):
-        #print('ipv6addres')
-        #print (test.get_ipv6_dst())
-        return IPv6(src=test.get_ipv6_src() if test else self.__link_local_addr,\
-                    dst= test.get_ipv6_dst() if test else self.__all_nodes_addr)
-                    #dst = self.__config.get('setup1-1_advertise','ipv6_addr'))
-                    #
-                      
-    
-    def icmpv6_ra(self,test=None):
-        logging.info('icmpv6_ra 99') 
-        print("prf")
-        print (test.get_flag_prf())
-        print (type(test.get_flag_prf()))  
-        print("m")
-        print (test.get_flag_M())
-        print (type(test.get_flag_M()))        
-        print("o")
-        print (test.get_flag_O())
-        print (type(test.get_flag_O()))   
-        print("chlim")
-        print (test.get_flag_chlim())
-        print (type(test.get_flag_chlim()))   
-        print("router")
-        print (test.get_routerlifetime())
-        print (type(test.get_routerlifetime()))  
-         #
-        return ICMPv6ND_RA(M=test.get_flag_M(),\
-                            O=test.get_flag_O(),\
-                            prf = test.get_flag_prf(),\
-                            routerlifetime=test.get_routerlifetime(),\
-                            chlim=test.get_flag_chlim())
-
-    def icmpv6_pd(self,test=None):
-        return ICMPv6NDOptPrefixInfo(L=test.get_flag_L(),\
-                                        A=test.get_flag_A(),\
-                                        R=test.get_flag_R(),\
-                                        validlifetime=test.get_validlifetime(),\
-                                        preferredlifetime=test.get_preferredlifetime(),\
-                                        prefix=self.__config.get('wan','global_addr'))
-
-    def icmpv6_ns(self,test=None):
-        return ICMPv6ND_NS(tgt=test.get_tgt())
-
-    def icmpv6_lla(self,test=None):
-        return ICMPv6NDOptDstLLAddr(lladdr=test.get_lla())
-
-    def icmpv6_src_lla(self,test=None):
-        return ICMPv6NDOptSrcLLAddr(lladdr=test.get_lla())
-
-
-    def icmpv6_na(self,test=None):
-        return ICMPv6ND_NA(S=1,\
-                            R=1,\
-                            O=1,\
-                tgt=test.get_tgt())
-
-    def icmpv6_lla_lan(self,test=None):
-
-    def icmpv6_na_lan(self,test=None):
-
-            self.icmpv6_na_lan(fields)/\
-            self.icmpv6_lla_lan(fields),\
 
 
 
-    def udp(self,test=None):
-        return UDP()
 
-    def udp_reconfigure(self,test=None):
-        return UDP(sport=test.get_udp_sport(),\
-                    dport=test.get_udp_dport())
+
+
+    def client_fqdn(self,test=None):
+        # >>> ls(DHCP6OptClientFQDN)                                                                                                                                                          
+        # optcode    : ShortEnumField                      = (39)
+        # optlen     : FieldLenField                       = (None)
+        # res        : BitField  (5 bits)                  = (0)
+        # flags      : FlagsField  (3 bits)                = (<Flag 0 ()>)
+        # fqdn       : DNSStrField                         = (b'.')
+        return DHCP6OptClientFQDN(fqdn= test.get_fdqn().encode())
 
     def dhcp(self,test=None):
         if test:
@@ -168,7 +104,6 @@ class SendMsgs:
     def dhcp_advertise(self,test=None):
         print('advertise')
         return DHCP6_Advertise(trid=test.get_xid())
-
 
     def dhcp_client_id_lan(self,test=None):
         print('client id')
@@ -181,38 +116,6 @@ class SendMsgs:
     def dhcp_information(self,test=None):
         return DHCP6_InfoRequest(trid=test.get_xid())
 
-    def elapsedtime(self,test=None):
-        # >>> ls(DHCP6OptElapsedTime)                                                                                                                                                         
-        # optcode    : ShortEnumField                      = (8)
-        # optlen     : ShortField                          = (2)
-        # elapsedtime : _ElapsedTimeField                   = (0)
-        return DHCP6OptElapsedTime(elapsedtime= test.get_elapsetime())
-    def client_fqdn(self,test=None):
-        # >>> ls(DHCP6OptClientFQDN)                                                                                                                                                          
-        # optcode    : ShortEnumField                      = (39)
-        # optlen     : FieldLenField                       = (None)
-        # res        : BitField  (5 bits)                  = (0)
-        # flags      : FlagsField  (3 bits)                = (<Flag 0 ()>)
-        # fqdn       : DNSStrField                         = (b'.')
-        return DHCP6OptClientFQDN(fqdn= test.get_fdqn().encode())
-    def opt_vendor_class(self,test=None):
-        # >>> ls(DHCP6OptVendorClass)                                                                                                                                                         
-        # optcode    : ShortEnumField                      = (16)
-        # optlen     : FieldLenField                       = (None)
-        # enterprisenum : IntEnumField                        = (None)
-        # vcdata     : _VendorClassDataField               = ([])
-        return DHCP6OptVendorClass(vcdata = test.get_vendor_class().encode() ,\
-                                   enterprisenum= test.get_enterprise())
-
-
-
-    def opt_req(self,test=None):
-        #>>> ls(DHCP6OptOptReq)                                                                                                                                                                                                                                                          
-        # optcode    : ShortEnumField                      = (6)
-        # optlen     : FieldLenField                       = (None)
-        # reqopts    : _OptReqListField                    = ([23, 24])
-
-        return DHCP6OptOptReq(reqopts=[17,23,24,32])
 
     def dhcp_solicit(self,test=None):
         return DHCP6_Solicit(trid=int(test.get_xid().encode(),16))
@@ -222,71 +125,8 @@ class SendMsgs:
         #return DHCP6OptServerId(duid=test.get_server_duid())
         return DHCP6OptServerId(duid=b'\x00\x01\x00\x01\x1f\xef\x03\x96\x44\x87\xfc\xba\x75\x46')
 
-    def opt_ia_na_lan(self,test=None):
-        print('opt_ia')
-        # optcode    : ShortEnumField                      = (25)
-        # optlen     : FieldLenField                       = (None)
-        # iaid       : XIntField                           = (None)
-        # T1         : IntField                            = (None)
-        # T2         : IntField                            = (None)
-        # iapdopt    : PacketListField                     = ([])
-        #print('TIPO IAID_NA')
-        #print(type(test.get_iaid()))
-        #logging.info('TIPO IAID_NA')
-        #logging.info(type(test.get_iaid()))
-        return DHCP6OptIA_NA(iaid = test.get_iaid(),\
-                            T1 = int(self.__config.get('solicitlan','t1')),\
-                            T2 = int(self.__config.get('solicitlan','t2')))
-                           
- 
-
-    def opt_ia_na(self,test=None):
-        print('opt_ia')
-        # optcode    : ShortEnumField                      = (25)
-        # optlen     : FieldLenField                       = (None)
-        # iaid       : XIntField                           = (None)
-        # T1         : IntField                            = (None)
-        # T2         : IntField                            = (None)
-        # iapdopt    : PacketListField                     = ([])
-        #print('TIPO IAID_NA')
-        #print(type(test.get_iaid()))
-        #logging.info('TIPO IAID_NA')
-        #logging.info(type(test.get_iaid()))
-        return DHCP6OptIA_NA(iaid = test.get_iaid(),\
-                            T1 = int(self.__config.get('setup1-1_advertise','t1')),\
-                            T2 = int(self.__config.get('setup1-1_advertise','t2')),\
-                            ianaopts=DHCP6OptIAAddress(addr=self.__config.get('setup1-1_advertise','ia_na_address'),\
-                                                        preflft=int(self.__config.get('setup1-1_advertise','ia_na_pref_lifetime')),\
-                                                        validlft=int(self.__config.get('setup1-1_advertise','ia_na_validtime'))))
-    
-    def opt_ia_pd(self,test=None):
-        print('opt_id')
-
-#         optcode    : ShortEnumField                      = (26)
-# optlen     : FieldLenField                       = (None)
-# preflft    : IntEnumField                        = (0)
-# validlft   : IntEnumField                        = (0)
-# plen       : ByteField                           = (48)
-# prefix     : IP6Field                            = ('2001:db8::')
-# iaprefopts : PacketListField                     = ([])
-        #logging.info('TIPO IAID_NA')
-        #logging.info(type(test.get_iaid()))
-        return DHCP6OptIA_PD(iaid =test.get_iaid(),\
-                            T1 = int(self.__config.get('setup1-1_advertise','t1')),\
-                            T2 = int(self.__config.get('setup1-1_advertise','t2')),\
-                            iapdopt=DHCP6OptIAPrefix(prefix = self.__config.get('setup1-1_advertise','ia_pd_address'),\
-                                                        preflft = int(self.__config.get('setup1-1_advertise','ia_pd_pref_lifetime')),\
-                                                        validlft = int(self.__config.get('setup1-1_advertise','ia_pd_validtime')),\
-                                                        plen= int(self.__config.get('setup1-1_advertise','ia_pd_pref_len'))))
 
 
-
-    def opt_dns_server(self):
-        return DHCP6OptDNSServers(dnsservers=[self.__config.get('setup1-1_advertise','dns_rec_name_server')])
-
-    def opt_dns_domain(self):
-        #dnsdomains : DomainNameListField                 = ([])
-        return DHCP6OptDNSDomains(dnsdomains=[self.__config.get('setup1-1_advertise','domain_search')])
 
     def dhcp_reply(self,test=None):
         return DHCP6_Reply(trid=test.get_xid())
@@ -295,8 +135,7 @@ class SendMsgs:
     def dhcp_reconf_accept(self):
         return DHCP6OptReconfAccept()
 
-    def echo_request(self):
-        return ICMPv6EchoRequest()
+
 
     def dhcp_reconfigure(self,test):
         print('int(test.get_dhcp_reconf_type()')
@@ -346,10 +185,212 @@ class SendMsgs:
                             authinfo = self.__my_key_msg)
 
     def dhcp_auth_zero(self):
-    
         return DHCP6OptAuth(replay=self.__rep,\
                             authinfo = b'\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
 
+    def ether(self,test=None):
+        #print('etheraddres')
+        #print (test.get_ether_dst())
+        return Ether(src= test.get_ether_src() if test else self.__wan_mac_tr1,\
+                dst = test.get_ether_dst() if test else None)
+
+    def echo_request(self):
+        return ICMPv6EchoRequest()
+
+    def elapsedtime(self,test=None):
+        # >>> ls(DHCP6OptElapsedTime)                                                                                                                                                         
+        # optcode    : ShortEnumField                      = (8)
+        # optlen     : ShortField                          = (2)
+        # elapsedtime : _ElapsedTimeField                   = (0)
+        return DHCP6OptElapsedTime(elapsedtime= test.get_elapsetime())
+
+
+    def ipv6(self,test=None):
+        #print('ipv6addres')
+        #print (test.get_ipv6_dst())
+        return IPv6(src=test.get_ipv6_src() if test else self.__link_local_addr,\
+                    dst= test.get_ipv6_dst() if test else self.__all_nodes_addr)
+                    #dst = self.__config.get('setup1-1_advertise','ipv6_addr'))
+                    #
+                      
+    
+    def icmpv6_ra(self,test=None):
+        logging.info('icmpv6_ra 99') 
+        print("prf")
+        print (test.get_flag_prf())
+        print (type(test.get_flag_prf()))  
+        print("m")
+        print (test.get_flag_M())
+        print (type(test.get_flag_M()))        
+        print("o")
+        print (test.get_flag_O())
+        print (type(test.get_flag_O()))   
+        print("chlim")
+        print (test.get_flag_chlim())
+        print (type(test.get_flag_chlim()))   
+        print("router")
+        print (test.get_routerlifetime())
+        print (type(test.get_routerlifetime()))  
+         #
+        return ICMPv6ND_RA(M=test.get_flag_M(),\
+                            O=test.get_flag_O(),\
+                            prf = test.get_flag_prf(),\
+                            routerlifetime=test.get_routerlifetime(),\
+                            chlim=test.get_flag_chlim())
+
+    def icmpv6_pd(self,test=None):
+        if test.get_pd_prefixlen() == None:
+            return ICMPv6NDOptPrefixInfo(L=test.get_flag_L(),\
+                                        A=test.get_flag_A(),\
+                                        R=test.get_flag_R(),\
+                                        validlifetime=test.get_validlifetime(),\
+                                        preferredlifetime=test.get_preferredlifetime(),\
+                                        prefix=self.__config.get('wan','global_addr'))
+        else:
+            return ICMPv6NDOptPrefixInfo(L=test.get_flag_L(),\
+                                        A=test.get_flag_A(),\
+                                        R=test.get_flag_R(),\
+                                        prefixlen= test.get_pd_prefixlen(),\
+                                        validlifetime=test.get_validlifetime(),\
+                                        preferredlifetime=test.get_preferredlifetime(),\
+                                        prefix=self.__config.get('wan','global_addr'))
+
+    def icmpv6_ns(self,test=None):
+        return ICMPv6ND_NS(tgt=test.get_tgt())
+
+    def icmpv6_rs(self,test=None):
+        return ICMPv6ND_RS()
+
+    def icmpv6_lla(self,test=None):
+        return ICMPv6NDOptDstLLAddr(lladdr=test.get_lla())
+
+    def icmpv6_src_lla(self,test=None):
+        return ICMPv6NDOptSrcLLAddr(lladdr=test.get_lla())
+
+
+    def icmpv6_na(self,test=None):
+        return ICMPv6ND_NA(S=1,\
+                            R=1,\
+                            O=1,\
+                tgt=test.get_tgt())
+
+    def icmpv6_lla_lan(self,test=None):
+        return ICMPv6NDOptSrcLLAddr(lladdr=test.get_lla())
+
+    def icmpv6_na_lan(self,test=None):
+        return ICMPv6ND_NA(S=1,\
+                            R=1,\
+                            O=1,\
+                tgt=test.get_tgt())
+
+
+
+    def opt_dns_server(self):
+        return DHCP6OptDNSServers(dnsservers=[self.__config.get('setup1-1_advertise','dns_rec_name_server')])
+
+    def opt_dns_domain(self):
+        #dnsdomains : DomainNameListField                 = ([])
+        return DHCP6OptDNSDomains(dnsdomains=[self.__config.get('setup1-1_advertise','domain_search')])
+
+    def opt_ia_pd(self,test=None):
+        print('opt_id')
+
+        if test.get_dhcp_plen() == None:
+            return DHCP6OptIA_PD(iaid =test.get_iaid(),\
+                                T1 = int(self.__config.get('setup1-1_advertise','t1')),\
+                                T2 = int(self.__config.get('setup1-1_advertise','t2')),\
+                                iapdopt=DHCP6OptIAPrefix(prefix = self.__config.get('setup1-1_advertise','ia_pd_address'),\
+                                                            preflft = int(self.__config.get('setup1-1_advertise','ia_pd_pref_lifetime')),\
+                                                            validlft = int(self.__config.get('setup1-1_advertise','ia_pd_validtime')),\
+                                                            plen= int(self.__config.get('setup1-1_advertise','ia_pd_pref_len'))))
+        else:
+            return DHCP6OptIA_PD(iaid =test.get_iaid(),\
+                                T1 = test.get_dhcp_t1(),\
+                                T2 = test.get_dhcp_t2(),\
+                                iapdopt=DHCP6OptIAPrefix(prefix = self.__config.get('setup1-1_advertise','ia_pd_address'),\
+                                                            preflft = test.get_dhcp_preflft(),\
+                                                            validlft = test.get_dhcp_validlft(),\
+                                                            plen= test.get_dhcp_plen()))
+                    
+
+
+
+
+
+
+    def udp(self,test=None):
+        return UDP()
+
+    def udp_reconfigure(self,test=None):
+        return UDP(sport=test.get_udp_sport(),\
+                    dport=test.get_udp_dport())
+
+#         optcode    : ShortEnumField                      = (26)
+# optlen     : FieldLenField                       = (None)
+# preflft    : IntEnumField                        = (0)
+# validlft   : IntEnumField                        = (0)
+# plen       : ByteField                           = (48)
+# prefix     : IP6Field                            = ('2001:db8::')
+# iaprefopts : PacketListField                     = ([])
+        #logging.info('TIPO IAID_NA')
+        #logging.info(type(test.get_iaid()))
+
+    def opt_ia_na(self,test=None):
+        print('opt_ia_WAN')
+        print(test.get_iaid())
+        print('iaid')
+        # optcode    : ShortEnumField                      = (25)
+        # optlen     : FieldLenField                       = (None)
+        # iaid       : XIntField                           = (None)
+        # T1         : IntField                            = (None)
+        # T2         : IntField                            = (None)
+        # iapdopt    : PacketListField                     = ([])
+        #print('TIPO IAID_NA')
+        #print(type(test.get_iaid()))
+        #logging.info('TIPO IAID_NA')
+        #logging.info(type(test.get_iaid()))
+        return DHCP6OptIA_NA(iaid = test.get_iaid(),\
+                            T1 = int(self.__config.get('setup1-1_advertise','t1')),\
+                            T2 = int(self.__config.get('setup1-1_advertise','t2')),\
+                            ianaopts=DHCP6OptIAAddress(addr=self.__config.get('setup1-1_advertise','ia_na_address'),\
+                                                        preflft=int(self.__config.get('setup1-1_advertise','ia_na_pref_lifetime')),\
+                                                        validlft=int(self.__config.get('setup1-1_advertise','ia_na_validtime'))))
+    
+
+    def opt_ia_na_lan(self,test=None):
+        print('opt_ia')
+        # optcode    : ShortEnumField                      = (25)
+        # optlen     : FieldLenField                       = (None)
+        # iaid       : XIntField                           = (None)
+        # T1         : IntField                            = (None)
+        # T2         : IntField                            = (None)
+        # iapdopt    : PacketListField                     = ([])
+        #print('TIPO IAID_NA')
+        #print(type(test.get_iaid()))
+        #logging.info('TIPO IAID_NA')
+        #logging.info(type(test.get_iaid()))
+        return DHCP6OptIA_NA(iaid = test.get_iaid(),\
+                            T1 = int(self.__config.get('solicitlan','t1')),\
+                            T2 = int(self.__config.get('solicitlan','t2')))
+                           
+    def opt_vendor_class(self,test=None):
+        # >>> ls(DHCP6OptVendorClass)                                                                                                                                                         
+        # optcode    : ShortEnumField                      = (16)
+        # optlen     : FieldLenField                       = (None)
+        # enterprisenum : IntEnumField                        = (None)
+        # vcdata     : _VendorClassDataField               = ([])
+        return DHCP6OptVendorClass(vcdata = test.get_vendor_class().encode() ,\
+                                   enterprisenum= test.get_enterprise())
+
+
+
+    def opt_req(self,test=None):
+        #>>> ls(DHCP6OptOptReq)                                                                                                                                                                                                                                                          
+        # optcode    : ShortEnumField                      = (6)
+        # optlen     : FieldLenField                       = (None)
+        # reqopts    : _OptReqListField                    = ([23, 24])
+
+        return DHCP6OptOptReq(reqopts=[17,23,24,32]) 
 
 
 
@@ -374,6 +415,26 @@ class SendMsgs:
             self.icmpv6_pd(fields),\
             iface=self.__wan_device_tr1,inter=1)
 
+    def send_tr1_RA_no_IA_PD(self,fields=None):
+        
+        # tr1_et = Ether(src=self.__wan_mac_tr1)
+        # tr1_ip = IPv6(src=self.__link_local_addr,\
+        #               dst=self.__all_nodes_addr)
+        # tr1_rs = ICMPv6ND_RA(M=self.__flag_M,\
+        #                     O=self.__flag_O,\
+        #                     routerlifetime=self.__routerlifetime,\
+        #                     chlim=self.__flag_chlim)
+        # tr1_pd = ICMPv6NDOptPrefixInfo(L=self.__flag_L,\
+        #                                 A=self.__flag_A,\
+        #                                 R=self.__flag_R,\
+        #                                 validlifetime=self.__validlifetime,\
+        #                                 preferredlifetime=self.__preferredlifetime,\
+        #                                 prefix=self.__global_addr)
+        sendp(self.ether(fields)/\
+            self.ipv6(fields)/\
+            self.icmpv6_ra(fields),\
+            iface=self.__wan_device_tr1,inter=1)
+
     def send_dhcp_advertise(self,fields=None):
         #sendp(Ether()/IPv6()/UDP()/DHCP6_Advertise()/DHCP6OptClientId()/DHCP6OptServerId()/DHCP6OptIA_NA()/DHCP6OptIA_PD()/DHCP6OptDNSServers()/DHCP6OptDNSDomains(),iface='lo')
         sendp(self.ether(fields)/\
@@ -387,6 +448,21 @@ class SendMsgs:
             self.opt_dns_server()/\
             self.opt_dns_domain(),\
             iface=self.__wan_device_tr1,inter=1)
+
+    def send_dhcp_advertise_no_IA_PD(self,fields=None):
+        #sendp(Ether()/IPv6()/UDP()/DHCP6_Advertise()/DHCP6OptClientId()/DHCP6OptServerId()/DHCP6OptIA_NA()/DHCP6OptIA_PD()/DHCP6OptDNSServers()/DHCP6OptDNSDomains(),iface='lo')
+        print('SEM IA PD')
+        sendp(self.ether(fields)/\
+            self.ipv6(fields)/\
+            self.udp()/\
+            self.dhcp_advertise(fields)/\
+            self.dhcp_client_id(fields)/\
+            self.dhcp_server_id(fields)/\
+            self.opt_ia_na(fields)/\
+            self.opt_dns_server()/\
+            self.opt_dns_domain(),\
+            iface=self.__wan_device_tr1,inter=1)
+
 
     def send_dhcp_reply(self,fields=None):
         #sendp(Ether()/IPv6()/UDP()/DHCP6_Advertise()/DHCP6OptClientId()/DHCP6OptServerId()/DHCP6OptIA_NA()/DHCP6OptIA_PD()/DHCP6OptDNSServers()/DHCP6OptDNSDomains(),iface='lo')
@@ -415,6 +491,12 @@ class SendMsgs:
             self.icmpv6_ns(fields)/\
             self.icmpv6_src_lla(fields),\
             iface=self.__wan_device_tr1,inter=1)
+
+    def send_icmp_rs(self,fields=None,contador=None):
+        sendp(self.ether(fields)/\
+            self.ipv6(fields)/\
+            self.icmpv6_rs(fields),\
+            iface='enxc025e901dfba',inter=1)
 
     def send_icmp_na(self,fields=None,contador=None):
         sendp(self.ether(fields)/\
