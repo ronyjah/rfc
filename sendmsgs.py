@@ -318,7 +318,21 @@ class SendMsgs:
                                                             preflft = test.get_dhcp_preflft(),\
                                                             validlft = test.get_dhcp_validlft(),\
                                                             plen= test.get_dhcp_plen()))
-                    
+
+
+    def opt_ia_pd_v3(self,test=None):
+        print('opt_id')
+        return DHCP6OptIA_PD(iaid =test.get_iaid(),\
+                                T1 = test.get_dhcp_t1(),\
+                                T2 = test.get_dhcp_t2(),\
+                                iapdopt=DHCP6OptIAPrefix(prefix = test.get_prefix_addr(),\
+                                                            preflft = test.get_dhcp_preflft(),\
+                                                            validlft = test.get_dhcp_validlft(),\
+                                                            plen= test.get_dhcp_plen()))
+
+
+
+
 
     def opt_ia_pd_v2(self,test=None):
         print('opt_id')
@@ -514,6 +528,23 @@ class SendMsgs:
             self.dhcp_server_id(fields)/\
             self.opt_ia_na(fields)/\
             self.opt_ia_pd_v2(fields)/\
+            self.dhcp_auth2()/\
+            self.dhcp_reconf_accept()/\
+            self.opt_dns_server()/\
+            self.opt_dns_domain(),\
+            iface=self.__wan_device_tr1,inter=1)
+
+
+    def send_dhcp_reply_v3(self,fields=None):
+        #sendp(Ether()/IPv6()/UDP()/DHCP6_Advertise()/DHCP6OptClientId()/DHCP6OptServerId()/DHCP6OptIA_NA()/DHCP6OptIA_PD()/DHCP6OptDNSServers()/DHCP6OptDNSDomains(),iface='lo')
+        sendp(self.ether(fields)/\
+            self.ipv6(fields)/\
+            self.udp()/\
+            self.dhcp_reply(fields)/\
+            self.dhcp_client_id(fields)/\
+            self.dhcp_server_id(fields)/\
+            self.opt_ia_na(fields)/\
+            self.opt_ia_pd_v3(fields)/\
             self.dhcp_auth2()/\
             self.dhcp_reconf_accept()/\
             self.opt_dns_server()/\

@@ -19,6 +19,7 @@ from test273c import Test273c
 from test274a import Test274a
 from test274b import Test274b
 from test275a import Test275a
+from test275b import Test275b
 format = "%(asctime)s: %(message)s"
 logging.basicConfig(format=format, level=logging.DEBUG,
                     datefmt="%H:%M:%S")
@@ -99,4 +100,5 @@ class CeRouter(Profile):
         #self.add_step(Test273c(self.__config))
         #self.add_step(Test274a(self.__config))
         #self.add_step(Test274b(self.__config))
-        self.add_step(Test275a(self.__config))
+        #self.add_step(Test275a(self.__config))
+        self.add_step(Test275b(self.__config))

@@ -66,6 +66,7 @@ class ConfigSetup1_1:
         self.__dhcp_plen = None
         self.__dhcp_validlft = None
         self.__active_renew_dhcp = None
+        self.__prefix_addr = None
         self.__recvd_dhcp_renew = False
         self.__dhcp_renew_done = False
         self.__sendmsgssetup1_1 = SendMsgs(self.__config)
@@ -80,6 +81,12 @@ class ConfigSetup1_1:
 
     #recebe o pacote
     #packetSniffer return pkt
+
+    def get_prefix_addr(self):
+        return self.__prefix_addr
+    def set_prefix_addr(self,valor):
+        self.__prefix_addr = valor
+
 
     def get_recvd_dhcp_renew(self):
         return self.__recvd_dhcp_renew
