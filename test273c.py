@@ -18,7 +18,7 @@ format = "%(asctime)s: %(message)s"
 logging.basicConfig(format=format, level=logging.DEBUG,
                     datefmt="%H:%M:%S")
 
-class Test273a:
+class Test273c:
 
     def __init__(self,config):
         self.__queue_wan = Queue()
@@ -35,7 +35,7 @@ class Test273a:
         self.__wan_mac_tr1 = self.__config.get('wan','wan_mac_tr1')
         self.__link_local_addr = self.__config.get('wan','link_local_addr')
         self.__all_nodes_addr = self.__config.get('multicast','all_nodes_addr')
-        self.__test_desc = self.__config.get('tests','2.7.3a')
+        self.__test_desc = self.__config.get('tests','2.7.3c')
         self.__t_lan = None
         self.__config_setup_lan = ConfigSetup1_1_Lan(self.__config,self.__lan_device)
 
@@ -49,16 +49,16 @@ class Test273a:
         self.__config_setup1_1.set_flag_A(self.__config.get('t1.6.6b','flag_a'))
         self.__config_setup1_1.set_flag_R(self.__config.get('t1.6.6b','flag_r'))
         self.__config_setup1_1.set_flag_prf(self.__config.get('t1.6.6b','flag_prf'))
-        self.__config_setup1_1.set_validlifetime(self.__config.get('t2.7.3a','validlifetime'))
-        self.__config_setup1_1.set_preferredlifetime(self.__config.get('t2.7.3a','preferredlifetime'))
-        self.__config_setup1_1.set_routerlifetime(self.__config.get('t2.7.3a','routerlifetime'))
+        self.__config_setup1_1.set_validlifetime(self.__config.get('t2.7.3c','validlifetime'))
+        self.__config_setup1_1.set_preferredlifetime(self.__config.get('t2.7.3c','preferredlifetime'))
+        self.__config_setup1_1.set_routerlifetime(self.__config.get('t2.7.3c','routerlifetime'))
         self.__config_setup1_1.set_intervalo(self.__config.get('t1.6.6b','intervalo'))
 
-        self.__config_setup1_1.set_dhcp_t1(self.__config.get('t2.7.3a','dhcp_t1'))
-        self.__config_setup1_1.set_dhcp_t2(self.__config.get('t2.7.3a','dhcp_t2'))
-        self.__config_setup1_1.set_dhcp_preflft(self.__config.get('t2.7.3a','dhcp_preflft'))
-        self.__config_setup1_1.set_dhcp_validlft(self.__config.get('t2.7.3a','dhcp_validlft'))
-        self.__config_setup1_1.set_dhcp_plen(self.__config.get('t2.7.3a','dhcp_plen'))
+        self.__config_setup1_1.set_dhcp_t1(self.__config.get('t2.7.3c','dhcp_t1'))
+        self.__config_setup1_1.set_dhcp_t2(self.__config.get('t2.7.3c','dhcp_t2'))
+        self.__config_setup1_1.set_dhcp_preflft(self.__config.get('t2.7.3c','dhcp_preflft'))
+        self.__config_setup1_1.set_dhcp_validlft(self.__config.get('t2.7.3c','dhcp_validlft'))
+        self.__config_setup1_1.set_dhcp_plen(self.__config.get('t2.7.3c','dhcp_plen'))
    
     def set_flags_lan(self):
         self.__config_setup_lan.set_elapsetime(self.__config.get('solicitlan','elapsetime'))
@@ -73,62 +73,64 @@ class Test273a:
         
     def run_Lan(self):
         #self.__config_setup_lan_.flags_partA()
-        logging.info('Thread da LAN')
+        logging.info('Thread da LAN inicio')
         t_test = 0
         sent_reconfigure = False
         time_over = False
         self.set_flags_lan()
         while not self.__queue_lan.full():
             while self.__queue_lan.empty():
-                if t_test < 35:
-                    logging.info('Thread da LAN time')
-                    time.sleep(1)
-                    if self.__config_setup1_1.get_setup1_1_OK():
-                        logging.info('Thread da WAN DONE')
-                        t_test = t_test + 1
-                    #pkt = self.__queue_lan.get()
-                else:
-                    self.__config_setup_lan.set_setup_lan_start()
-                    self.__config_setup_lan.set_ipv6_src(self.__config.get('lan','lan_local_addr'))
-                    self.__config_setup_lan.set_ether_src(self.__config.get('lan','mac_address'))
-                    self.__config_setup_lan.set_ether_dst(self.__config.get('multicast','all_mac_routers'))
-                    self.__config_setup_lan.set_ipv6_dst(self.__config.get('general','all_routers_address'))
-                    self.__config_setup_lan.set_lla(self.__config.get('lan','mac_address'))
-                    self.__sendmsgs.send_icmp_rs(self.__config_setup_lan)
-                    time_over = True
-           
+                
+                logging.info('Thread da LAN time')
+                time.sleep(1)
+                if self.__config_setup1_1.get_setup1_1_OK():
+                    logging.info('Thread da WAN DONE')
+                    t_test = t_test + 1
+                    if self.__config_setup1_1.get_recvd_dhcp_renew():
+                #pkt = self.__queue_lan.get()
+                    
+                        self.__config_setup_lan.set_setup_lan_start()
+                        self.__config_setup_lan.set_ipv6_src(self.__config.get('lan','lan_local_addr'))
+                        self.__config_setup_lan.set_ether_src(self.__config.get('lan','mac_address'))
+                        self.__config_setup_lan.set_ether_dst(self.__config.get('multicast','all_mac_routers'))
+                        self.__config_setup_lan.set_ipv6_dst(self.__config.get('general','all_routers_address'))
+                        self.__config_setup_lan.set_lla(self.__config.get('lan','mac_address'))
+                        self.__sendmsgs.send_icmp_rs(self.__config_setup_lan)
+                        time_over = True
+                        
             pkt = self.__queue_lan.get()
             if not self.__config_setup_lan.get_setup_OK():
                 if not self.__config_setup_lan.get_disapproved():
                     self.__config_setup_lan.run_setup1_1(pkt)
                 else:
-                    logging.info('Reprovado Teste 2.7.3a - Falha em completar o Common Setup 1.1 da RFC')
+                    logging.info('Reprovado Teste 2.7.3c - Falha em completar o Common Setup 1.1 da RFC')
                     self.__packet_sniffer_lan.stop() 
                     return False       
             else:
                 logging.info('Setup LAN  Concluido')
                 routerlifetime = self.__config_setup_lan.get_routerlifetime_CeRouter()
                 if routerlifetime == 0:
-                    logging.info(' Teste 2.7.3a: routerlifetime OK. routerlifetime  igual a 0')
-                    logging.info('Aprovado Teste2.7.3a.')
+                    logging.info(' Teste 2.7.3c: routerlifetime OK. routerlifetime  igual a 0')
+                    logging.info('Aprovado Teste2.7.3c.')
                     self.__packet_sniffer_lan.stop()
                     return True
                 else:                     
-                    logging.info(' Teste2.7.3a: Reprovado. routerlifetime acima de 0 ')
+                    logging.info(' Teste2.7.3c: Reprovado. routerlifetime acima de 0 ')
                     logging.info(routerlifetime)
                     self.__packet_sniffer_lan.stop()
                     return False
 
+
                 
     def run(self):
-#        self.__t_lan =  Thread(target=self.run_Lan,name='LAN_Thread')
-#        self.__t_lan.start()
+        self.__t_lan =  Thread(target=self.run_Lan,name='LAN_Thread')
+        self.__t_lan.start()
         
-        self.__packet_sniffer_wan = PacketSniffer('Test273a-WAN',self.__queue_wan,self,self.__config,self.__wan_device_tr1)
+        self.__packet_sniffer_wan = PacketSniffer('Test273b-WAN',self.__queue_wan,self,self.__config,self.__wan_device_tr1)
         self.__packet_sniffer_wan.start()
         
- #       self.__packet_sniffer_lan = PacketSniffer('Test273a-LAN',self.__queue_lan,self,self.__config,self.__lan_device)
-#        test_lan = self.__packet_sniffer_lan.start()
+        self.__packet_sniffer_lan = PacketSniffer('Test273b-LAN',self.__queue_lan,self,self.__config,self.__lan_device)
+        test_lan = self.__packet_sniffer_lan.start()
         
         self.set_flags()
         logging.info(self.__test_desc)
@@ -137,9 +139,9 @@ class Test273a:
         time_over = False
         #time.sleep(11111)
         finish_wan = True
-        self.__config_setup1_1.set_pd_prefixlen(self.__config.get('t2.7.3a','pd_prefixlen')) 
-        self.__config_setup1_1.set_routerlifetime(self.__config.get('t2.7.3a','routerlifetime')) 
-        self.__config_setup1_1.active_DHCP_no_IA_PD()
+        self.__config_setup1_1.set_pd_prefixlen(self.__config.get('t2.7.3c','pd_prefixlen')) 
+        self.__config_setup1_1.set_routerlifetime(self.__config.get('t2.7.3c','routerlifetime')) 
+        #self.__config_setup1_1.active_DHCP_no_IA_PD()
         while not self.__queue_wan.full():
             while self.__queue_wan.empty():
                 if t_test < 60:
@@ -167,10 +169,11 @@ class Test273a:
             else: 
                 print('WAN - Concluido')
                 print('LAN RESULT')
-                print(test_lan)
-                if not finish_wan:
-                    self.__packet_sniffer_wan.stop()
-                    finish_wan = True 
+                self.__config_setup1_1.check_layers(pkt)
+                #print(test_lan)
+                #if not finish_wan:
+                    #self.__packet_sniffer_wan.stop()
+                    #finish_wan = True 
                 #continue
 
                 # if pkt.haslayer(DHCP6_Renew):

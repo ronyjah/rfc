@@ -107,14 +107,14 @@ class SendMsgs:
 
     def dhcp_client_id_lan(self,test=None):
         print('client id')
-        return DHCP6OptClientId(duid=b'\x00\x01\x00\x01\x1f\xef\x03\x96\x44\x87\xfc\xba\xab\xab')#b'\x00\x01\x00\x01\xc7\x92\xbc\x9a\x00\xe0\x4c\x86\x70\x3c')
+        return DHCP6OptClientId(duid=b'\x00\x01\x00\x01\x1f\xef\x03\x96\x44\x87\xfc\xba\xab\xab') #b'\x00\x01\x00\x01\xc7\x92\xbc\x9a\x00\xe0\x4c\x86\x70\x3c')
 
     def dhcp_client_id(self,test=None):
         print('client id')
         return DHCP6OptClientId(duid=test.get_client_duid())#b'\x00\x01\x00\x01\xc7\x92\xbc\x9a\x00\xe0\x4c\x86\x70\x3c')
 
     def dhcp_information(self,test=None):
-        return DHCP6_InfoRequest(trid=test.get_xid())
+        return DHCP6_InfoRequest(trid=int(test.get_xid().encode(),16))
 
 
     def dhcp_solicit(self,test=None):
@@ -197,6 +197,9 @@ class SendMsgs:
     def echo_request(self):
         return ICMPv6EchoRequest()
 
+    def echo_reply(self):
+        return ICMPv6EchoReply()
+
     def elapsedtime(self,test=None):
         # >>> ls(DHCP6OptElapsedTime)                                                                                                                                                         
         # optcode    : ShortEnumField                      = (8)
@@ -260,6 +263,10 @@ class SendMsgs:
 
     def icmpv6_rs(self,test=None):
         return ICMPv6ND_RS()
+
+
+    def icmpv6_lla_dst_lan(self,test=None):
+        return ICMPv6NDOptDstLLAddr(lladdr=test.get_lla())
 
     def icmpv6_lla(self,test=None):
         return ICMPv6NDOptDstLLAddr(lladdr=test.get_lla())
@@ -475,7 +482,9 @@ class SendMsgs:
             self.opt_ia_na(fields)/\
             self.opt_ia_pd(fields)/\
             self.dhcp_auth2()/\
-            self.dhcp_reconf_accept(),\
+            self.dhcp_reconf_accept()/\
+            self.opt_dns_server()/\
+            self.opt_dns_domain(),\
             iface=self.__wan_device_tr1,inter=1)
 
     def send_echo_request(self,fields=None,contador=None):
@@ -484,6 +493,14 @@ class SendMsgs:
             self.echo_request()/\
             Raw(load='abcdef'),\
             iface=self.__wan_device_tr1,inter=1)
+
+    def send_echo_reply(self,fields=None,contador=None):
+        sendp(self.ether(fields)/\
+            self.ipv6(fields)/\
+            self.echo_reply()/\
+            Raw(load='abcdef'),\
+            iface=self.__wan_device_tr1,inter=1)
+
             
     def send_icmp_ns(self,fields=None,contador=None):
         sendp(self.ether(fields)/\
@@ -495,7 +512,8 @@ class SendMsgs:
     def send_icmp_rs(self,fields=None,contador=None):
         sendp(self.ether(fields)/\
             self.ipv6(fields)/\
-            self.icmpv6_rs(fields),\
+            self.icmpv6_rs(fields)/\
+            self.icmpv6_src_lla(fields),\
             iface='enxc025e901dfba',inter=1)
 
     def send_icmp_na(self,fields=None,contador=None):
@@ -626,10 +644,10 @@ class SendMsgs:
             self.dhcp_information(fields)/\
             self.elapsedtime(fields)/\
             self.dhcp_client_id_lan(fields)/\
-            self.client_fqdn(fields)/\
+            #self.client_fqdn(fields)/\
             #self.dhcp_server_id(fields)/\
             self.opt_vendor_class(fields)/\
-            self.opt_ia_na(fields)/\
+            #self.opt_ia_na(fields)/\
             self.opt_req(fields),\
             iface=fields.get_lan_device(),inter=1)            
 
@@ -653,7 +671,7 @@ class SendMsgs:
         sendp(self.ether(fields)/\
             self.ipv6(fields)/\
             self.icmpv6_na_lan(fields)/\
-            self.icmpv6_lla_lan(fields),\
+            self.icmpv6_lla_dst_lan(fields),\
             iface='enxc025e901dfba',inter=1)
 
 

@@ -68,16 +68,14 @@ class ConfigSetup1_1_Lan:
         self.__domainname =None
         self.__domainname_lifetime_CeRouter  =None
         self.__linklayer_CeRouter = None
-        self.__dhcp_t1 = None
-        self.__dhcp_t2 = None   
-        self.__dhcp_preflft = None
-        self.__dhcp_plen = None
-        self.__dhcp_validlft = None
-
-
+        self.__setup_lan_start = None
+        self.__lla = None
+        self.__routerlifetime_CeRouter = None
         self.__disapproved = False
         self.__dhcp_reconf_type = None
         self.__local_addr_ceRouter =None
+        self.__recvd_dhcp_srcladdr = False
+        self.__recvd_dhcp_rdnss = False
         self.__sendmsgssetup1_1 = SendMsgs(self.__config)
         self.__wan_device_tr1 = self.__config.get('wan','device_wan_tr1')
         self.__lan_device  = self.__config.get('lan','lan_device')
@@ -148,7 +146,10 @@ class ConfigSetup1_1_Lan:
         return self.__validlifetime_CeRouter 
     def get_preferredlifetime_CeRouter(self):
         return self.__preferredlifetime_CeRouter
-        
+    
+    def get_routerlifetime_CeRouter(self):    
+        return self.__routerlifetime_CeRouter
+
     def get_prefixlen_CeRouter(self):
         return self.__prefixlen_CeRouter
     def get_r_prefixaddr_CeRouter(self):
@@ -329,27 +330,10 @@ class ConfigSetup1_1_Lan:
     def set_client_duid(self,valor):
         self.__client_duid = valor
 
-    def set_dhcp_t1(self,valor):
-        self.__dhcp_t1 = valor
-    def set_dhcp_t2(self,valor):
-        self.__dhcp_t2 = valor   
-    def set_dhcp_preflft(self,valor):
-        self.__dhcp_preflft = valor
-    def set_dhcp_plen(self,valor):
-        self.__dhcp_plen = valor
-    def set_dhcp_validlft(self,valor):
-        self.__dhcp_validlft = valor
-
-    def get_dhcp_t1(self):
-        return int(self.__dhcp_t1)
-    def get_dhcp_t2(self):
-        return int(self.__dhcp_t2)   
-    def get_dhcp_preflft(self):
-        return int(self.__dhcp_preflft)
-    def get_dhcp_plen(self):
-        return int(self.__dhcp_plen)
-    def get_dhcp_validlft(self):
-        return int(self.__dhcp_validlft)
+    def get_recvd_dhcp_rdnss(self):
+        return self.__recvd_dhcp_rdnss
+    def get_recvd_dhcp_srcladdr(self):
+        return self.__recvd_dhcp_srcladdr
 
 
     def get_client_duid(self):
@@ -387,9 +371,18 @@ class ConfigSetup1_1_Lan:
 
     def get_disapproved(self):
         return self.__disapproved
+    def get_lla(self):
+        return self.__lla
 
+    def set_lla(self,valor):
+        self.__lla = valor
+    def set_setup_lan_start(self):
+        self.__setup_lan_start = True
     def run_setup1_1(self,pkt):
         
+
+        if not self.__setup_lan_start:
+            return
         if self.__disapproved:
             return False
         if pkt[Ether].src == self.__config.get('lan','mac_address'):
@@ -400,44 +393,34 @@ class ConfigSetup1_1_Lan:
             return False
 
         if not pkt.haslayer(ICMPv6NDOptPrefixInfo):
+            #self.set_ipv6_src(self.__config.get('lan','lan_local_addr'))
+            #self.set_ether_src(self.__config.get('lan','mac_address'))
+            #self.set_ether_dst(self.__config.get('multicast','all_mac_routers'))
+            #self.set_ipv6_dst(self.__config.get('general','all_routers_address'))
+            #self.set_lla(self.__config.get('lan','mac_address'))
+            #self.__sendmsgssetup1_1.send_icmp_rs(self)
+            #return
+            pass
+
+        if not pkt.haslayer(ICMPv6ND_NS):
             self.set_ipv6_src(self.__config.get('lan','lan_local_addr'))
             self.set_ether_src(self.__config.get('lan','mac_address'))
-            self.set_ether_dst(self.__config.get('multicast','all_mac_routers'))
-            self.set_ipv6_dst(self.__config.get('general','all_routers_address'))
-            self.__sendmsgssetup1_1.send_icmp_rs(self)
-            return
-        # if pkt.haslayer(ICMPv6ND_RA):
-        #     if pkt.haslayer(ICMPv6NDOptPrefixInfo):
-        #         self.__
-        #     if pkt.haslayer(ICMPv6NDOptRDNSS):
-                
-        #     if pkt.haslayer(ICMPv6NDOptDNSSL):
+            self.set_ether_dst(pkt[Ether].src)
+            self.set_ipv6_dst(pkt[IPv6].src)
+            self.set_tgt(self.__config.get('lan','lan_local_addr'))
+            self.set_lla(self.__config.get('lan','mac_address'))
+            self.__sendmsgssetup1_1.send_icmp_na_lan(self)
+            #return
+            pass
 
-# type       : ByteField                           = (3)
-# len        : ByteField                           = (4)
-# prefixlen  : ByteField                           = (64)
-# L          : BitField  (1 bit)                   = (1)
-# A          : BitField  (1 bit)                   = (1)
-# R          : BitField  (1 bit)                   = (0)
-# res1       : BitField  (5 bits)                  = (0)
-# validlifetime : XIntField                           = (4294967295)
-# preferredlifetime : XIntField                           = (4294967295)
 
-# >>> ls(ICMPv6NDOptRDNSS)                                                                                                                                                                                                                                                        
-# type       : ByteField                           = (25)
-# len        : FieldLenField                       = (None)
-# res        : ShortField                          = (None)
-# lifetime   : IntField                            = (4294967295)
-# dns        : IP6ListField                        = ([])
+        
 
-# >>> ls(ICMPv6NDOptDNSSL)                                                                                                                                                                                                                                                        
-# type       : ByteField                           = (31)
-# len        : FieldLenField                       = (None)
-# res        : ShortField                          = (None)
-# lifetime   : IntField                            = (4294967295)
-# searchlist : DomainNameListField                 = ([])
+        #if pkt.haslayer(DHCP6_Reply):
+
 
         if pkt.haslayer(ICMPv6ND_RA):
+            self.__routerlifetime_CeRouter = pkt[ICMPv6ND_RA].routerlifetime
             if pkt.haslayer(ICMPv6NDOptPrefixInfo):
                 self.__prefixaddr_CeRouter = pkt[ICMPv6NDOptPrefixInfo].prefix
                 self.__l_CeRouter = pkt[ICMPv6NDOptPrefixInfo].L
@@ -448,9 +431,8 @@ class ConfigSetup1_1_Lan:
                 self.__prefixlen_CeRouter = pkt[ICMPv6NDOptPrefixInfo].prefixlen
                 self.send_solicit = True
                 self.__setup1_1_OK = True
-                return
-
-
+                #return
+            print('CHegou RA na LAN')
             if pkt.haslayer(ICMPv6NDOptRouteInfo):
                 self.__r_prefixaddr_CeRouter = pkt[ICMPv6NDOptRouteInfo].prefix
                 self.__r_plen_CeRouter = pkt[ICMPv6NDOptRouteInfo].plen
@@ -460,199 +442,25 @@ class ConfigSetup1_1_Lan:
             if pkt.haslayer(ICMPv6NDOptRDNSS):
                 self.__rdnss_dns_CeRouter = pkt[ICMPv6NDOptRDNSS].dns
                 self.__rdnss_lifetime_CeRouter = pkt[ICMPv6NDOptRDNSS].lifetime
-            
+                self.__recvd_dhcp_rdnss = True
+   
             if pkt.haslayer(ICMPv6NDOptDNSSL):
                 self.__domainname = pkt[ICMPv6NDOptDNSSL].searchlist
                 self.__domainname_lifetime_CeRouter = pkt[ICMPv6NDOptDNSSL].lifetime
+                self.__recvd_dhcp_srcladdr = True  
 
             if pkt.haslayer(ICMPv6NDOptSrcLLAddr):
-                self.__linklayer_CeRouter = pkt[ICMPv6NDOptSrcLLAddr].lladdr  
-                
+                self.__linklayer_CeRouter = pkt[ICMPv6NDOptSrcLLAddr].lladdr
+                #self.__recvd_dhcp_srcladdr = True  
 
 
-        if not self.send_solicit:
-            self.set_ipv6_src(self.__config.get('solicitlan','ip'))
-            self.set_ether_src(self.__config.get('solicitlan','mac'))
-            self.set_ether_dst(self.__config.get('multicast','all_mac_routers'))
-            self.set_ipv6_dst(self.__config.get('multicast','all_routers_addr'))
-            #self.set_elapsetime(self.__config.get('solicitlan','elapsetime'))
-            #self.set_client_duid(self.__config.get('solicitlan','duid'))
-            #self.set_fdqn(self.__config.get('solicitlan','clientfqdn'))
-            self.__sendmsgssetup1_1.send_dhcp_solicit_ia_na(self)
-            #self.send_solicit = False
-            return
-
-        
-        # if self.send_solicit:
-        #     self.set_ipv6_src(self.__config.get('informationlan','ip'))
-        #     self.set_ether_src(self.__config.get('informationlan','mac'))
+        # if not self.send_solicit:
+        #     self.set_ipv6_src(self.__config.get('solicitlan','ip'))
+        #     self.set_ether_src(self.__config.get('solicitlan','mac'))
         #     self.set_ether_dst(self.__config.get('multicast','all_mac_routers'))
         #     self.set_ipv6_dst(self.__config.get('multicast','all_routers_addr'))
-        #     self.set_elapsetime(self.__config.get('solicitlan','elapsetime'))
-        #     self.set_client_duid(self.__config.get('solicitlan','duid'))
-        #     self.set_fdqn(self.__config.get('solicitlan','clientfqdn'))
+
         #     self.__sendmsgssetup1_1.send_dhcp_solicit_ia_na(self)
-        #     self.send_solicit = True
-        #     #return
+        #     return
 
-              
-
-#             ICMPv6NDOptPrefixInfo prefix
-#                 self.set_mac_ceRouter(pkt[Ether].src)
-# >>> ls(ICMPv6NDOptRDNSS)                                                                                                                                                                                                                                                        
-# type       : ByteField                           = (25)
-# len        : FieldLenField                       = (None)
-# res        : ShortField                          = (None)
-# lifetime   : IntField                            = (4294967295)
-# dns        : IP6ListField                        = ([])
-
-# >>> ls(ICMPv6NDOptRouteInfo)                                                                                                                                                                                                                                                    
-# type       : ByteField                           = (24)
-# len        : FieldLenField                       = (None)
-# plen       : ByteField                           = (None)
-# res1       : BitField  (3 bits)                  = (0)
-# prf        : BitEnumField  (2 bits)              = (0)
-# res2       : BitField  (3 bits)                  = (0)
-# rtlifetime : IntField                            = (4294967295)
-# prefix     : _IP6PrefixField                     = (None)
-
-# >>> ls(ICMPv6NDOptDNSSL)                                                                                                                                                                                                                                                        
-# type       : ByteField                           = (31)
-# len        : FieldLenField                       = (None)
-# res        : ShortField                          = (None)
-# lifetime   : IntField                            = (4294967295)
-# searchlist : DomainNameListField                 = ([])
-
-# ls(ICMPv6NDOptSrcLLAddr)                                                                                                                                                                                                                                                    
-# type       : ByteField                           = (1)
-# len        : ByteField                           = (1)
-# lladdr     : MACField                            = ('00:00:00:00:00:00')
-
-
-
-
-        #if send_info_req:
-
-    # def get_elapsetime(self):
-    #     return self.__elapsetime
-
-    # def set_elapsetime(self,valor):
-    #     self.__elapsetime = valor
-
-    # def get_fdqn(self):
-    #     return self.__fdqn
-    
-    # def set_fdqn(self,valor):
-    #     self.__fdqn = valor
-
-    # def get_vendor_class(self):
-    #     return self.__vendor_class
-
-    # def set_vendor_class(self,valor):
-    #     self.__vendor_class = valor
-
-    # def get_enterprise(self):
-    #     return self.__enterprise
-
-    # def set_enterprise(self,valor):
-    #     self.__enterprise = valor 
-
-    # def get_opt_req(self):
-    #     return self.opt_req
-
-    # def set_opt_req(self,valor):
-    #     self.opt_req = valor
-
-        # if pkt.haslayer(ICMPv6ND_NS):
-        #     if pkt[ICMPv6ND_NS].tgt == '::':
-        #         return
-        #     if pkt[IPv6].src == '::':
-        #         return
-        #     if pkt[IPv6].src == self.__config.get('wan','link_local_addr'):
-        #         return
-        #     if pkt[IPv6].src == self.__config.get('wan','global_wan_addr'):
-        #         return
-        #     if not self.__ND_local_OK:
-        #         #self.set_ether_dst(pkt[Ether].src)
-        #         self.set_mac_ceRouter(pkt[Ether].src)
-        #         # print('local addr ND')
-        #         self.set_local_addr_ceRouter(pkt[ICMPv6ND_NS].tgt)
-        #         # print('local addr')
-        #         # print(self.get_local_addr_ceRouter())
-        #         # print('ether dst')
-        #         # print(self.get_ether_dst())
-        #         self.__ND_local_OK = True
-
-        # if self.__ND_local_OK and not self.__local_ping_OK:
-        #     #print('send_echoreq:')
-        #     #logging.info('send_echoreq:')
-        #     self.set_ipv6_src(self.__config.get('wan','link_local_addr'))
-        #     self.set_ipv6_dst(self.get_local_addr_ceRouter())
-        #     self.set_ether_src(self.__config.get('wan','link_local_mac'))
-        #     self.set_ether_dst(self.get_mac_ceRouter())
-        #     self.__sendmsgssetup1_1.send_echo_request(self)
-        #     self.__local_ping_OK = True
-
-        # if pkt.haslayer(ICMPv6ND_RS):
-        #     if not self.__ND_local_OK:
-        #         self.__disapproved = True
-        #         logging.info('Reprovado Setup 1.1 - Não Recebeu ICMP_NS antes de ICMP_RS')
-        #         return False
-        #     else:
-        #         self.set_ether_src(self.__config.get('wan','ra_mac'))
-        #         self.set_ether_dst(self.__config.get('multicast','all_mac_nodes'))
-        #         self.set_ipv6_src(self.__config.get('wan','ra_address'))
-        #         self.set_ipv6_dst(self.__config.get('multicast','all_nodes_addr'))
-        #         self.__sendmsgssetup1_1.send_tr1_RA(self)
-
-
-        # if pkt.haslayer(DHCP6_Solicit):
-        #     #print('send_dhcpadv:')
-        #     #logging.info('send_dhcp_adv:')
-        #     self.set_xid(pkt[DHCP6_Solicit].trid)
-        #     self.set_client_duid(pkt[DHCP6OptClientId].duid)
-        #     self.set_server_duid((self.__config.get('setup1-1_advertise','server_duid')))
-        #     self.set_iaid(pkt[DHCP6OptIA_NA].iaid)
-        #     self.set_ether_src(self.__config.get('wan','link_local_mac'))
-        #     self.set_ether_dst(self.get_mac_ceRouter())
-        #     self.set_ipv6_dst(self.get_local_addr_ceRouter())
-        #     # print('local addr')
-        #     # print(self.get_local_addr_ceRouter())
-        #     # print('ether dst')
-        #     # print(self.get_ether_dst())
-        #     self.set_ipv6_src(self.__config.get('wan','link_local_addr'))  
-
-        #     self.__sendmsgssetup1_1.send_dhcp_advertise(self)
-
-        # if pkt.haslayer(DHCP6_Request):
-        #     #print('send_dhcpreply:')
-        #     #logging.info('send_dhcp_reply:')
-        #     self.set_ether_src(self.__config.get('wan','link_local_mac'))
-        #     self.set_ether_dst(self.get_mac_ceRouter())
-        #     self.set_ipv6_dst(self.get_local_addr_ceRouter())
-        #     self.set_ipv6_src(self.__config.get('wan','link_local_addr'))
-        #     self.__sendmsgssetup1_1.send_dhcp_reply(self)
-        #     self.__dhcp_ok = True
-        #     self.__setup1_1_OK = True
-        #     logging.info("Common Test Setup 1.1 OK")
-
-        # if self.__dhcp_ok:
-        #     #print('send_icmp_ns:')
-        #     #logging.info('send_icmp_ns:')
-        #     self.set_ether_src(self.__config.get('multicast','all_mac_nodes'))
-        #     self.set_ether_dst(self.__config.get('wan','link_local_mac'))
-        #     self.set_ipv6_dst(self.__config.get('multicast','all_nodes_addr'))
-        #     self.set_ipv6_src(self.__config.get('wan','global_wan_addr'))
-        #     self.set_tgt(self.__config.get('wan','link_local_addr'))
-        #     self.__sendmsgssetup1_1.send_icmp_ns(self)
-        #     self.__global_ns_ok = True
-            
-        # #1 sned ping test
-
-
-
-        # if pkt.haslayer(ICMPv6EchoReply):
-        #     #print('DESTINO IPv6:' + pkt[IPv6].dst)
-        #     if pkt[IPv6].dst == self.__config.get('wan','link_local_addr'):
-        #         #print('DESTINO IPv6 OKKKK')
-        #         self.__local_ping_OK = True
+        
