@@ -84,5 +84,5 @@ class CeRouter(Profile):
         #self.add_step(Test166a(self.__config))
         #self.add_step(Test166b(self.__config))
         #self.add_step(Test167(self.__config))
-        #self.add_step(Test271a(self.__config))
-        self.add_step(Test273a(self.__config))
+        self.add_step(Test271a(self.__config))
+        #self.add_step(Test273a(self.__config))

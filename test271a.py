@@ -104,7 +104,7 @@ class Test271a:
                 prefrix_pd = self.__config_setup_lan.get_prefixlen_CeRouter()
                 preferredlifetime = self.__config_setup_lan.get_preferredlifetime_CeRouter()
                 validlifetime = self.__config_setup_lan.get_validlifetime_CeRouter()
-                if prefrix_pd == 64:
+                if prefrix_pd == int(self.__config.get('t2.7.1a','dhcp_plen')):
                     logging.info('Aprovado Teste 2.7.1.a Prefixo IA_PD é tamanho 64')
                     #self.__packet_sniffer_lan.stop()
                     #return True
@@ -114,7 +114,7 @@ class Test271a:
                     self.__packet_sniffer_lan.stop()
                     return False
 
-                if preferredlifetime < int(self.__config.get('t2.7.1a','preferredlifetime')):
+                if preferredlifetime <= int(self.__config.get('t2.7.1a','dhcp_preflft')):
                     logging.info(' Teste 2.7.1a: preferredlifetime OK. preferredlifetime dentro do especificado no RA')
                     #self.__packet_sniffer_lan.stop()
                     #return True
@@ -124,7 +124,7 @@ class Test271a:
                     self.__packet_sniffer_lan.stop()
                     return False
 
-                if validlifetime < int(self.__config.get('t2.7.1a','validlifetime')):
+                if validlifetime <= int(self.__config.get('t2.7.1a','dhcp_validlft')):
                     logging.info('Teste 2.7.1a: preferredlifetime OK. validlifetime dentro do especificado no RA')
                     #self.__packet_sniffer_lan.stop()
                     #return True
