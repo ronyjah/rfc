@@ -65,7 +65,9 @@ class ConfigSetup1_1:
         self.__dhcp_preflft = None
         self.__dhcp_plen = None
         self.__dhcp_validlft = None
+        self.__active_renew_dhcp = None
         self.__recvd_dhcp_renew = False
+        self.__dhcp_renew_done = False
         self.__sendmsgssetup1_1 = SendMsgs(self.__config)
         self.__wan_device_tr1 = self.__config.get('wan','device_wan_tr1')
         self.__wan_mac_tr1 = self.__config.get('wan','wan_mac_tr1')
@@ -81,6 +83,7 @@ class ConfigSetup1_1:
 
     def get_recvd_dhcp_renew(self):
         return self.__recvd_dhcp_renew
+
     def active_DHCP_no_IA_PD(self):
         self.__active_DHCP_no_IA_PD = True
 
@@ -332,11 +335,31 @@ class ConfigSetup1_1:
     def get_dhcp_validlft(self):
         return int(self.__dhcp_validlft)
 
+    def active_renew_dhcp(self):
+        self.__active_renew_dhcp = True
+
+    def get_dhcp_renew_done(self):
+        return self.__dhcp_renew_done
+    
+
     def check_layers(self,pkt):
         print('Check REnew')
         if pkt.haslayer(DHCP6_Renew):
             print('====PACOTE RENEW====')
             self.__recvd_dhcp_renew = True
+
+            if self.__active_renew_dhcp:
+                self.set_mac_ceRouter(pkt[Ether].src)
+                self.set_local_addr_ceRouter(pkt[IPv6].src)
+                self.set_xid(pkt[DHCP6_Renew].trid)
+                self.set_ipv6_src(self.__config.get('wan','link_local_addr'))
+                self.set_ipv6_dst(pkt[IPv6].src)
+                self.set_ether_src(self.__config.get('wan','link_local_mac'))
+                self.set_ether_dst(pkt[Ether].src)
+                self.__sendmsgssetup1_1.send_dhcp_reply_v2(self)
+                #self.__dhcp_ok = True
+                self.__dhcp_renew_done = True
+
 
         # if pkt.haslayer(ICMPv6ND_NS):
 

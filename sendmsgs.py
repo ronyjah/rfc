@@ -320,7 +320,24 @@ class SendMsgs:
                                                             plen= test.get_dhcp_plen()))
                     
 
+    def opt_ia_pd_v2(self,test=None):
+        print('opt_id')
+        return DHCP6OptIA_PD(iaid =test.get_iaid(),\
+                                T1 = test.get_dhcp_t1(),\
+                                T2 = test.get_dhcp_t2(),\
+                                iapdopt=DHCP6OptIAPrefix(prefix = self.__config.get('setup1-1_advertise','ia_pd_address'),\
+                                                            preflft = test.get_dhcp_preflft(),\
+                                                            validlft = test.get_dhcp_validlft(),\
+                                                            plen= test.get_dhcp_plen() )/\
+                                                            DHCP6OptIAPrefix(prefix=self.__config.get('setup1-1_advertise','ia_pd_address2'),\
+                                                                            preflft=int(self.__config.get('t2.7.5a','dhcp_preflft2')),\
+                                                                            validlft=int(self.__config.get('t2.7.5a','dhcp_validlft2')),\
+                                                                            plen=int(self.__config.get('t2.7.5a','dhcp_plen2'))))
 
+
+
+
+                                                                
 
 
 
@@ -487,12 +504,37 @@ class SendMsgs:
             self.opt_dns_domain(),\
             iface=self.__wan_device_tr1,inter=1)
 
+    def send_dhcp_reply_v2(self,fields=None):
+        #sendp(Ether()/IPv6()/UDP()/DHCP6_Advertise()/DHCP6OptClientId()/DHCP6OptServerId()/DHCP6OptIA_NA()/DHCP6OptIA_PD()/DHCP6OptDNSServers()/DHCP6OptDNSDomains(),iface='lo')
+        sendp(self.ether(fields)/\
+            self.ipv6(fields)/\
+            self.udp()/\
+            self.dhcp_reply(fields)/\
+            self.dhcp_client_id(fields)/\
+            self.dhcp_server_id(fields)/\
+            self.opt_ia_na(fields)/\
+            self.opt_ia_pd_v2(fields)/\
+            self.dhcp_auth2()/\
+            self.dhcp_reconf_accept()/\
+            self.opt_dns_server()/\
+            self.opt_dns_domain(),\
+            iface=self.__wan_device_tr1,inter=1)
+
+
     def send_echo_request(self,fields=None,contador=None):
         sendp(self.ether(fields)/\
             self.ipv6(fields)/\
             self.echo_request()/\
             Raw(load='abcdef'),\
             iface=self.__wan_device_tr1,inter=1)
+
+    def send_echo_request_lan(self,fields=None,contador=None):
+        sendp(self.ether(fields)/\
+            self.ipv6(fields)/\
+            self.echo_request()/\
+            Raw(load='abcdef'),\
+            iface='enxc025e901dfba',inter=1)
+
 
     def send_echo_reply(self,fields=None,contador=None):
         sendp(self.ether(fields)/\
@@ -666,6 +708,13 @@ class SendMsgs:
             self.opt_req(fields),\
             iface='enxc025e901dfba',inter=1)
 
+
+    def send_icmp_na_lan(self,fields=None,contador=None):
+        sendp(self.ether(fields)/\
+            self.ipv6(fields)/\
+            self.icmpv6_na_lan(fields)/\
+            self.icmpv6_lla_dst_lan(fields),\
+            iface='enxc025e901dfba',inter=1)
 
     def send_icmp_na_lan(self,fields=None,contador=None):
         sendp(self.ether(fields)/\
