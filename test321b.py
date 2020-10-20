@@ -290,6 +290,7 @@ class Test321b:
 
                         continue
 
+
                     #print(pkt[IPv6].src)
                     #print(pkt[Ether].src)
                     self.__config_setup1_1.set_local_addr_ceRouter(pkt[IPv6].src)
