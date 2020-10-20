@@ -80,6 +80,7 @@ class Test275d:
         t_test1= 0
         sent_reconfigure = False
         time_over = False
+        send_ra = False
         self.set_flags_lan()
         self.__config_setup_lan.set_setup_lan_start()
         while not self.__queue_lan.full():
@@ -96,37 +97,38 @@ class Test275d:
                     if t_test < 65:
                         time.sleep(1)
                         t_test = t_test + 1
-                        if t_test % 10 ==0:
-                        
-                            self.__config_setup_lan.set_setup_lan_start()
+                        if t_test % 5 ==0:
+
+                            #self.__config_setup_lan.set_setup_lan_start()
                             self.__config_setup_lan.set_ipv6_src(self.__config.get('lan','lan_local_addr'))
                             self.__config_setup_lan.set_ether_src(self.__config.get('lan','mac_address'))
                             self.__config_setup_lan.set_ether_dst(self.__config.get('multicast','all_mac_routers'))
                             self.__config_setup_lan.set_ipv6_dst(self.__config.get('general','all_routers_address'))
                             self.__config_setup_lan.set_lla(self.__config.get('lan','mac_address'))
                             self.__sendmsgs.send_icmp_rs(self.__config_setup_lan)
+
                         
-                    if self.__config_setup_lan.get_ND_global_OK() and not self.__config_setup_lan.get_global_ping_OK():
-                        mac_global = self.__config_setup_lan.get_global_mac_ceRouter()
-                        ip_global = self.__config_setup_lan.get_global_addr_ceRouter()
-                        self.__config_setup_lan.set_ipv6_src(self.__config.get('lan','global_wan_addr'))
-                        self.__config_setup_lan.set_ether_src(self.__config.get('lan','mac_address'))
-                        self.__config_setup_lan.set_ether_dst(mac_global)
-                        self.__config_setup_lan.set_ipv6_dst(ip_global)
-                        self.__sendmsgs.send_echo_request_lan(self.__config_setup_lan)
+                            if self.__config_setup_lan.get_ND_global_OK() and not self.__config_setup_lan.get_global_ping_OK():
+                                mac_global = self.__config_setup_lan.get_global_mac_ceRouter()
+                                ip_global = self.__config_setup_lan.get_global_addr_ceRouter()
+                                self.__config_setup_lan.set_ipv6_src(self.__config.get('lan','global_wan_addr'))
+                                self.__config_setup_lan.set_ether_src(self.__config.get('lan','mac_address'))
+                                self.__config_setup_lan.set_ether_dst(mac_global)
+                                self.__config_setup_lan.set_ipv6_dst(ip_global)
+                                self.__sendmsgs.send_echo_request_lan(self.__config_setup_lan)
 
 
-                        self.__config_setup_lan.set_setup_lan_start()
-                        self.__config_setup_lan.set_ipv6_src(self.__config.get('lan','lan_local_addr'))
-                        self.__config_setup_lan.set_ether_src(self.__config.get('lan','mac_address'))
-                        self.__config_setup_lan.set_ether_dst(self.__config.get('multicast','all_mac_routers'))
-                        self.__config_setup_lan.set_ipv6_dst(self.__config.get('multicast','all_routers_addr'))
-                        self.__config_setup_lan.set_xid(self.__config.get('informationlan','xid'))
-                        #self.__config_setup_lan.set_lla(self.__config.get('lan','mac_address'))
-                        self.__config_setup_lan.set_elapsetime(self.__config.get('informationlan','elapsetime'))
-                        self.__config_setup_lan.set_vendor_class(self.__config.get('informationlan','vendorclass'))
-                        self.__sendmsgs.send_dhcp_information(self.__config_setup_lan)
-                        time_over = True
+                            #self.__config_setup_lan.set_setup_lan_start()
+                            self.__config_setup_lan.set_ipv6_src(self.__config.get('lan','lan_local_addr'))
+                            self.__config_setup_lan.set_ether_src(self.__config.get('lan','mac_address'))
+                            self.__config_setup_lan.set_ether_dst(self.__config.get('multicast','all_mac_routers'))
+                            self.__config_setup_lan.set_ipv6_dst(self.__config.get('multicast','all_routers_addr'))
+                            self.__config_setup_lan.set_xid(self.__config.get('informationlan','xid'))
+                            #self.__config_setup_lan.set_lla(self.__config.get('lan','mac_address'))
+                            self.__config_setup_lan.set_elapsetime(self.__config.get('informationlan','elapsetime'))
+                            self.__config_setup_lan.set_vendor_class(self.__config.get('informationlan','vendorclass'))
+                            self.__sendmsgs.send_dhcp_information(self.__config_setup_lan)
+                            time_over = True
 
             pkt = self.__queue_lan.get()
             if not self.__config_setup_lan.get_global_ping_OK():
@@ -139,35 +141,40 @@ class Test275d:
                     return False       
             else:
                 if self.__dhcp_renew_done :
+                    print('DONE CONCLUIDO- VALIDANDO MENSAGEM RA')
                     if t_test1 < 60:
+                        print('DONE CONCLUIDO- VALIDANDO MENSAGEM RA TEMPO')
                         time.sleep(1)
                         t_test1 = t_test1 + 1
-                        if t_test1 % 10 == 0:
+                        #if t_test1 % 10 == 0:
                             #self.__config_setup_lan.set_setup_lan_start()
-                            self.__config_setup_lan.set_ipv6_src(self.__config.get('lan','lan_local_addr'))
-                            self.__config_setup_lan.set_ether_src(self.__config.get('lan','mac_address'))
-                            self.__config_setup_lan.set_ether_dst(self.__config.get('multicast','all_mac_routers'))
-                            self.__config_setup_lan.set_ipv6_dst(self.__config.get('general','all_routers_address'))
-                            self.__config_setup_lan.set_lla(self.__config.get('lan','mac_address'))
-                            self.__sendmsgs.send_icmp_rs(self.__config_setup_lan)
-                    else:
-                        if pkt.haslayer(ICMPv6ND_RA):    
-                            if pkt.haslayer(ICMPv6NDOptPrefixInfo):
-                                if pkt[ICMPv6NDOptPrefixInfo].prefix != self.__config.get('setup1-1_advertise','ia_pd_address2'):
-                                    logging.info(' Teste2.7.5d: Reprovado. Não Recebeu o Prefixo atualizado')
-                                    #logging.info(routerlifetime)
+                        self.__config_setup_lan.set_ipv6_src(self.__config.get('lan','lan_local_addr'))
+                        self.__config_setup_lan.set_ether_src(self.__config.get('lan','mac_address'))
+                        self.__config_setup_lan.set_ether_dst(self.__config.get('multicast','all_mac_routers'))
+                        self.__config_setup_lan.set_ipv6_dst(self.__config.get('general','all_routers_address'))
+                        self.__config_setup_lan.set_lla(self.__config.get('lan','mac_address'))
+                        self.__sendmsgs.send_icmp_rs(self.__config_setup_lan)
+                    
+                        if pkt.haslayer(ICMPv6ND_RA):
+                            print('DONE CONCLUIDO- VALIDANDO MENSAGEM MENSAGEM RA')    
+                            if pkt.haslayer(ICMPv6NDOptRouteInfo):
+                                if pkt[ICMPv6NDOptRouteInfo].plen != 60:
+                                    logging.info(' Teste2.7.5d: Reprovado. Tamanho do prefixo diferente do anunciado no DHCP Reconfigure')
+                                    logging.info(pkt[ICMPv6NDOptPrefixInfo].prefixlen)
+                                    logging.info(pkt[ICMPv6NDOptRouteInfo].plen)
+
                                     self.__packet_sniffer_lan.stop()
                                     self.__finish_wan = True 
                                     self.__fail_test = True
                                     return False                                
                                 else: #self.__validlifetime_CeRouter == pkt[ICMPv6NDOptPrefixInfo].validlifetime
-                                    logging.info(' Teste 2.7.5d: Recebeu o Prefixo atualizado.')
+                                    logging.info(' Teste 2.7.5d:Tamanho do prefixo igual ao anunciado na mensagem DHCP Reconfigure.')
                                     logging.info('Aprovado Teste2.7.5d.')
                                     self.__packet_sniffer_lan.stop()
                                     self.__finish_wan = True
                                     self.__fail_test = False 
                                     return True       
-                    
+                            else: print('DONE CONCLUIDO- SEM PREFIX INFO RA')
                 # logging.info('Setup LAN  Concluido')
                 # if self.__config_setup_lan.get_recvd_dhcp_srcladdr():
                 #     logging.info(' Teste 2.7.5d: Recebido Recursive DNS OK.')
@@ -237,7 +244,7 @@ class Test275d:
                     print('WAN - Concluido')
                     print('LAN RESULT')
                     if not sent_reconfigure:
-                        time.sleep(3)
+                        time.sleep(25)
                         print('aqui7')
                         self.__config_setup1_1.set_ipv6_src(self.__config.get('wan','link_local_addr'))
                         print('aqui8')
@@ -266,11 +273,11 @@ class Test275d:
                             self.__config_setup1_1.set_ipv6_dst(pkt[IPv6].src)
                             self.__config_setup1_1.set_ether_src(self.__config.get('wan','link_local_mac'))
                             self.__config_setup1_1.set_ether_dst(pkt[Ether].src)
-                            self.__config_setup1_1.set_dhcp_preflft('0')
-                            self.__config_setup1_1.set_dhcp_validlft('0')
-                            self.__config_setup1_1.set_dhcp_plen('64')
-                            #self.__config_setup1_1.set_prefix_addr(self.__config.get('setup1-1_advertise','ia_pd_address2'))
-                            self.__sendmsgs.send_dhcp_reply_v2(self.__config_setup1_1)
+                            self.__config_setup1_1.set_dhcp_preflft('100')
+                            self.__config_setup1_1.set_dhcp_validlft('200')
+                            self.__config_setup1_1.set_dhcp_plen('60')
+                            self.__config_setup1_1.set_prefix_addr(self.__config.get('setup1-1_advertise','ia_pd_address'))
+                            self.__sendmsgs.send_dhcp_reply_v3(self.__config_setup1_1)
                             #self.__dhcp_ok = True
                             self.__dhcp_renew_done = True
                 else:
