@@ -216,7 +216,16 @@ class SendMsgs:
                     #dst = self.__config.get('setup1-1_advertise','ipv6_addr'))
                     #
                       
-    
+    def icmpv6_ra2(self,test=None):
+
+        return ICMPv6ND_RA(M=test.get_flag_M(),\
+                            O=test.get_flag_O(),\
+                            prf = test.get_flag_prf(),\
+                            reachabletime = test.get_reachabletime(),\
+                            retranstimer = test.get_retranstimer(),\
+                            routerlifetime=test.get_routerlifetime(),\
+                            chlim=test.get_flag_chlim())
+
     def icmpv6_ra(self,test=None):
         #logging.info('icmpv6_ra 99') 
         #print("prf")
@@ -240,6 +249,9 @@ class SendMsgs:
                             prf = test.get_flag_prf(),\
                             routerlifetime=test.get_routerlifetime(),\
                             chlim=test.get_flag_chlim())
+
+
+
 
     def icmpv6_pd(self,test=None):
         if test.get_pd_prefixlen() == None:
@@ -452,6 +464,29 @@ class SendMsgs:
             self.icmpv6_ra(fields)/\
             self.icmpv6_pd(fields),\
             iface=self.__wan_device_tr1,inter=1)
+
+
+    def send_tr1_RA2(self,fields=None):
+        
+        # tr1_et = Ether(src=self.__wan_mac_tr1)
+        # tr1_ip = IPv6(src=self.__link_local_addr,\
+        #               dst=self.__all_nodes_addr)
+        # tr1_rs = ICMPv6ND_RA(M=self.__flag_M,\
+        #                     O=self.__flag_O,\
+        #                     routerlifetime=self.__routerlifetime,\
+        #                     chlim=self.__flag_chlim)
+        # tr1_pd = ICMPv6NDOptPrefixInfo(L=self.__flag_L,\
+        #                                 A=self.__flag_A,\
+        #                                 R=self.__flag_R,\
+        #                                 validlifetime=self.__validlifetime,\
+        #                                 preferredlifetime=self.__preferredlifetime,\
+        #                                 prefix=self.__global_addr)
+        sendp(self.ether(fields)/\
+            self.ipv6(fields)/\
+            self.icmpv6_ra2(fields)/\
+            self.icmpv6_pd(fields),\
+            iface=self.__wan_device_tr1,inter=1)
+
 
     def send_tr1_RA_no_IA_PD(self,fields=None):
         
@@ -747,6 +782,14 @@ class SendMsgs:
             self.icmpv6_lla_dst_lan(fields),\
             iface='enxc025e901dfba',inter=1)
 
+
+
+    def send_icmp_ns_lan(self,fields=None,contador=None):
+        sendp(self.ether(fields)/\
+            self.ipv6(fields)/\
+            self.icmpv6_ns(fields)/\
+            self.icmpv6_src_lla(fields),\
+            iface='enxc025e901dfba',inter=1)
     # def send_icmp_na_lan(self,fields=None,contador=None):
     #     sendp(self.ether(fields)/\
     #         self.ipv6(fields)/\

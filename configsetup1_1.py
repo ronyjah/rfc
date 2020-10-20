@@ -57,6 +57,8 @@ class ConfigSetup1_1:
         self.__flag_prf = None
         self.udp_dport = None
         self.udp_sport = None
+        self.__reachabletime = None
+        self.__retranstimer = None
         self.__disapproved = False
         self.__dhcp_reconf_type = None
         self.__local_addr_ceRouter =None
@@ -67,6 +69,7 @@ class ConfigSetup1_1:
         self.__dhcp_validlft = None
         self.__active_renew_dhcp = None
         self.__prefix_addr = None
+        self.__set_ra2 = False
         self.__recvd_dhcp_renew = False
         self.__dhcp_renew_done = False
         self.__sendmsgssetup1_1 = SendMsgs(self.__config)
@@ -87,6 +90,17 @@ class ConfigSetup1_1:
     def set_prefix_addr(self,valor):
         self.__prefix_addr = valor
 
+    def get_reachabletime(self):
+        return self.__reachabletime
+    
+    def get_retranstimer(self):
+        return self.__retranstimer
+
+    def set_reachabletime(self,valor):
+        self.__reachabletime = valor
+    
+    def set_retranstimer(self,valor):
+        self.__retranstimer = valor
 
     def get_recvd_dhcp_renew(self):
         return self.__recvd_dhcp_renew
@@ -231,6 +245,9 @@ class ConfigSetup1_1:
 
     def set_ether_src(self, valor):
         self.__ether_src = valor
+        
+    def set_ND_local_OK(self):
+        self.__ND_local_OK = True
 
     def get_ether_src(self):
         return self.__ether_src
@@ -306,7 +323,9 @@ class ConfigSetup1_1:
     
     def set_udp_sport(self,valor):
         self.udp_sport = valor
-    
+
+    def set_ra2(self):
+        self.__set_ra2 = True
     
     def get_udp_dport(self):
         return int(self.udp_dport)
@@ -350,9 +369,9 @@ class ConfigSetup1_1:
     
 
     def check_layers(self,pkt):
-        print('Check REnew')
+        #print('Check REnew')
         if pkt.haslayer(DHCP6_Renew):
-            print('====PACOTE RENEW====')
+            #print('====PACOTE RENEW====')
             self.__recvd_dhcp_renew = True
 
             if self.__active_renew_dhcp:
@@ -412,15 +431,15 @@ class ConfigSetup1_1:
                 return
 
         if pkt.haslayer(ICMPv6ND_NS):
-            print('1')
+            #print('1')
             if pkt[ICMPv6ND_NS].tgt == '::':
-                print('11')
+                p#rint('11')
                 return
             if pkt[IPv6].src == self.__config.get('wan','link_local_addr'):
-                print('111')
+                #print('111')
                 return
             if pkt[IPv6].src == self.__config.get('wan','global_wan_addr'):
-                print('1111')
+                #print('1111')
                 return
             if pkt[IPv6].src == self.__config.get('wan','ra_address'):
                 return      
@@ -447,7 +466,7 @@ class ConfigSetup1_1:
                 self.set_tgt(self.__config.get('wan','link_local_addr'))
                 #self.__sendmsgssetup1_1.send_echo_request(self)
                 self.set_lla(self.__config.get('wan','link_local_mac'))
-                print("ENVIOU NAA")
+               # print("ENVIOU NAA")
                 if not self.__local_ping_OK:
                     self.__sendmsgssetup1_1.send_icmp_na(self)
                # time.sleep(10)
@@ -456,7 +475,7 @@ class ConfigSetup1_1:
                 self.set_local_addr_ceRouter(pkt[ICMPv6ND_NS].tgt)
                 self.set_mac_ceRouter(pkt[Ether].src)
 
-                print('enviou ICMP NA')
+                #print('enviou ICMP NA')
 
                 self.set_ipv6_src(self.__config.get('wan','link_local_addr'))
                 self.set_ipv6_dst(self.__config.get('multicast','all_nodes_addr'))
@@ -484,7 +503,7 @@ class ConfigSetup1_1:
             #return
         else:
             #self.__ND_local_OK = True
-            print('enviou ICMP NS')
+            #print('enviou ICMP NS')
             if not  self.__local_ping_OK:
                 self.set_ipv6_src(self.__config.get('wan','link_local_addr'))
                 self.set_ipv6_dst(self.__config.get('multicast','all_nodes_addr'))
@@ -511,14 +530,16 @@ class ConfigSetup1_1:
                 self.set_ipv6_dst(self.__config.get('multicast','all_nodes_addr'))
  #               if not self.__active_RA_no_IA_PD:
                 #self.set_lla(self.__config.get('wan','ra_mac'))
-                self.__sendmsgssetup1_1.send_tr1_RA(self)
-
+                if not self.__set_ra2:
+                    self.__sendmsgssetup1_1.send_tr1_RA(self)
+                else:
+                    self.__sendmsgssetup1_1.send_tr1_RA2(self)
             else:
                 self.set_local_addr_ceRouter(pkt[IPv6].src)
                 self.set_mac_ceRouter(pkt[Ether].src)                
 
 
-        print('PRE SOLICIT')
+       # print('PRE SOLICIT')
         if pkt.haslayer(DHCP6_Solicit) and self.__local_ping_OK:
             logging.info('SEND ADVERTISE 576')
             self.set_xid(pkt[DHCP6_Solicit].trid)

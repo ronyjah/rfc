@@ -80,6 +80,7 @@ class ConfigSetup1_1_Lan:
         self.__global_addr_ceRouter = None
         self.__global_mac_cerouter = None
         self.__ping_global = False
+        self.__mac_cerouter = None
         self.__sendmsgssetup1_1 = SendMsgs(self.__config)
         self.__wan_device_tr1 = self.__config.get('wan','device_wan_tr1')
         self.__lan_device  = self.__config.get('lan','lan_device')
@@ -363,7 +364,7 @@ class ConfigSetup1_1_Lan:
 
     def get_ND_local_OK(self):
         return  self.__ND_local_OK
-    
+
     def get_ND_global_OK(self):
         return  self.__ND_global_OK
 
