@@ -209,7 +209,9 @@ class SendMsgs:
 
 
     def ipv6(self,test=None):
-        #print('ipv6addres')
+        #print('ipv6addressrc')
+        #print(test.get_ipv6_src())
+        #print('ipv6addresdst')
         #print (test.get_ipv6_dst())
         return IPv6(src=test.get_ipv6_src() if test else self.__link_local_addr,\
                     dst= test.get_ipv6_dst() if test else self.__all_nodes_addr)

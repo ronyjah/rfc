@@ -91,10 +91,10 @@ class ConfigSetup1_1:
         self.__prefix_addr = valor
 
     def get_reachabletime(self):
-        return self.__reachabletime
+        return int(self.__reachabletime)
     
     def get_retranstimer(self):
-        return self.__retranstimer
+        return int(self.__retranstimer)
 
     def set_reachabletime(self,valor):
         self.__reachabletime = valor
