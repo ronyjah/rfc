@@ -63,7 +63,7 @@ class PacketSniffer(Thread):
 
     def PacketHandler(self,pkt):
         if pkt.haslayer(IPv6):
-            print (threading.currentThread().getName(), 'Run')
+            #print (threading.currentThread().getName(), 'Run')
             self.put_queue(pkt)
 
 

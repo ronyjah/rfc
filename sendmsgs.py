@@ -102,15 +102,15 @@ class SendMsgs:
             return DHCP6()
     
     def dhcp_advertise(self,test=None):
-        print('advertise')
+        #print('advertise')
         return DHCP6_Advertise(trid=test.get_xid())
 
     def dhcp_client_id_lan(self,test=None):
-        print('client id')
+        #print('client id')
         return DHCP6OptClientId(duid=b'\x00\x01\x00\x01\x1f\xef\x03\x96\x44\x87\xfc\xba\xab\xab') #b'\x00\x01\x00\x01\xc7\x92\xbc\x9a\x00\xe0\x4c\x86\x70\x3c')
 
     def dhcp_client_id(self,test=None):
-        print('client id')
+        #print('client id')
         return DHCP6OptClientId(duid=test.get_client_duid())#b'\x00\x01\x00\x01\xc7\x92\xbc\x9a\x00\xe0\x4c\x86\x70\x3c')
 
     def dhcp_information(self,test=None):
@@ -121,7 +121,7 @@ class SendMsgs:
         return DHCP6_Solicit(trid=int(test.get_xid().encode(),16))
 
     def dhcp_server_id(self,test=None):
-        print('server_Id')
+        #print('server_Id')
         #return DHCP6OptServerId(duid=test.get_server_duid())
         return DHCP6OptServerId(duid=b'\x00\x01\x00\x01\x1f\xef\x03\x96\x44\x87\xfc\xba\x75\x46')
 
@@ -138,10 +138,10 @@ class SendMsgs:
 
 
     def dhcp_reconfigure(self,test):
-        print('int(test.get_dhcp_reconf_type()')
-        print(test.get_dhcp_reconf_type())
-        print('type(test.get_dhcp_reconf_type()')
-        print(type(test.get_dhcp_reconf_type()))
+        #print('int(test.get_dhcp_reconf_type()')
+        #print(test.get_dhcp_reconf_type())
+        #print('type(test.get_dhcp_reconf_type()')
+        #print(type(test.get_dhcp_reconf_type()))
         #return DHCP6OptReconfMsg(msgtype=int(test.get_dhcp_reconf_type()))
         return DHCP6OptReconfMsg(msgtype=5)
     
@@ -218,22 +218,22 @@ class SendMsgs:
                       
     
     def icmpv6_ra(self,test=None):
-        logging.info('icmpv6_ra 99') 
-        print("prf")
-        print (test.get_flag_prf())
-        print (type(test.get_flag_prf()))  
-        print("m")
-        print (test.get_flag_M())
-        print (type(test.get_flag_M()))        
-        print("o")
-        print (test.get_flag_O())
-        print (type(test.get_flag_O()))   
-        print("chlim")
-        print (test.get_flag_chlim())
-        print (type(test.get_flag_chlim()))   
-        print("router")
-        print (test.get_routerlifetime())
-        print (type(test.get_routerlifetime()))  
+        #logging.info('icmpv6_ra 99') 
+        #print("prf")
+       # print (test.get_flag_prf())
+        #print (type(test.get_flag_prf()))  
+        #print("m")
+        # print (test.get_flag_M())
+        # print (type(test.get_flag_M()))        
+        # print("o")
+        # print (test.get_flag_O())
+        # print (type(test.get_flag_O()))   
+        # print("chlim")
+        # print (test.get_flag_chlim())
+        # print (type(test.get_flag_chlim()))   
+        # print("router")
+        # print (test.get_routerlifetime())
+        # print (type(test.get_routerlifetime()))  
          #
         return ICMPv6ND_RA(M=test.get_flag_M(),\
                             O=test.get_flag_O(),\
@@ -335,7 +335,7 @@ class SendMsgs:
 
 
     def opt_ia_pd_v2(self,test=None):
-        print('opt_id')
+        #print('opt_id')
         return DHCP6OptIA_PD(iaid =test.get_iaid(),\
                                 T1 = test.get_dhcp_t1(),\
                                 T2 = test.get_dhcp_t2(),\
@@ -374,9 +374,9 @@ class SendMsgs:
         #logging.info(type(test.get_iaid()))
 
     def opt_ia_na(self,test=None):
-        print('opt_ia_WAN')
-        print(test.get_iaid())
-        print('iaid')
+        #print('opt_ia_WAN')
+        #print(test.get_iaid())
+        #print('iaid')
         # optcode    : ShortEnumField                      = (25)
         # optlen     : FieldLenField                       = (None)
         # iaid       : XIntField                           = (None)
@@ -396,7 +396,7 @@ class SendMsgs:
     
 
     def opt_ia_na_lan(self,test=None):
-        print('opt_ia')
+        #print('opt_ia')
         # optcode    : ShortEnumField                      = (25)
         # optlen     : FieldLenField                       = (None)
         # iaid       : XIntField                           = (None)
@@ -489,7 +489,7 @@ class SendMsgs:
 
     def send_dhcp_advertise_no_IA_PD(self,fields=None):
         #sendp(Ether()/IPv6()/UDP()/DHCP6_Advertise()/DHCP6OptClientId()/DHCP6OptServerId()/DHCP6OptIA_NA()/DHCP6OptIA_PD()/DHCP6OptDNSServers()/DHCP6OptDNSDomains(),iface='lo')
-        print('SEM IA PD')
+        ##print('SEM IA PD')
         sendp(self.ether(fields)/\
             self.ipv6(fields)/\
             self.udp()/\
@@ -747,12 +747,12 @@ class SendMsgs:
             self.icmpv6_lla_dst_lan(fields),\
             iface='enxc025e901dfba',inter=1)
 
-    def send_icmp_na_lan(self,fields=None,contador=None):
-        sendp(self.ether(fields)/\
-            self.ipv6(fields)/\
-            self.icmpv6_na_lan(fields)/\
-            self.icmpv6_lla_dst_lan(fields),\
-            iface='enxc025e901dfba',inter=1)
+    # def send_icmp_na_lan(self,fields=None,contador=None):
+    #     sendp(self.ether(fields)/\
+    #         self.ipv6(fields)/\
+    #         self.icmpv6_na_lan(fields)/\
+    #         self.icmpv6_lla_dst_lan(fields),\
+    #         iface='enxc025e901dfba',inter=1)
 
 
 # >>> ls(DHCP6OptVendorClass)                                                                                                                                                         

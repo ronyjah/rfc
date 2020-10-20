@@ -466,7 +466,7 @@ class ConfigSetup1_1:
                 #self.__sendmsgssetup1_1.send_echo_request(self)
                 self.set_lla(self.__config.get('wan','link_local_mac'))
                 if not self.__ND_local_OK:
-                    print('nao tenho ND LOCAL OK')
+                    #print('nao tenho ND LOCAL OK')
                     self.__sendmsgssetup1_1.send_icmp_ns(self)
 
                     return
