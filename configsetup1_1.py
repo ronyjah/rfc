@@ -533,6 +533,7 @@ class ConfigSetup1_1:
                 if not self.__set_ra2:
                     self.__sendmsgssetup1_1.send_tr1_RA(self)
                 else:
+                    print('send_RA2')
                     self.__sendmsgssetup1_1.send_tr1_RA2(self)
             else:
                 self.set_local_addr_ceRouter(pkt[IPv6].src)
