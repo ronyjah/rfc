@@ -18,7 +18,7 @@ format = "%(asctime)s: %(message)s"
 logging.basicConfig(format=format, level=logging.DEBUG,
                     datefmt="%H:%M:%S")
 
-class Test322a:
+class Test322b:
 
     def __init__(self,config):
         self.__queue_wan = Queue()
@@ -35,34 +35,36 @@ class Test322a:
         self.__wan_mac_tr1 = self.__config.get('wan','wan_mac_tr1')
         self.__link_local_addr = self.__config.get('wan','link_local_addr')
         self.__all_nodes_addr = self.__config.get('multicast','all_nodes_addr')
-        self.__test_desc = self.__config.get('tests','3.2.2a')
+        self.__test_desc = self.__config.get('tests','3.2.2b')
         self.__t_lan = None
         self.__finish_wan = False
+        self.part2_lan_start = False
         self.__dhcp_renew_done = False
+        self.stop_ping_OK = False
         self.__config_setup_lan = ConfigSetup1_1_Lan(self.__config,self.__lan_device)
 
 
 
     def set_flags(self):
-        self.__config_setup1_1.set_flag_M(self.__config.get('t3.2.2a','flag_m'))
-        self.__config_setup1_1.set_flag_0(self.__config.get('t3.2.2a','flag_o'))
-        self.__config_setup1_1.set_flag_chlim(self.__config.get('t3.2.2a','flag_chlim'))
-        self.__config_setup1_1.set_flag_L(self.__config.get('t3.2.2a','flag_l'))
-        self.__config_setup1_1.set_flag_A(self.__config.get('t3.2.2a','flag_a'))
-        self.__config_setup1_1.set_flag_R(self.__config.get('t3.2.2a','flag_r'))
-        self.__config_setup1_1.set_flag_prf(self.__config.get('t3.2.2a','flag_prf'))
-        self.__config_setup1_1.set_validlifetime(self.__config.get('t3.2.2a','validlifetime'))
-        self.__config_setup1_1.set_preferredlifetime(self.__config.get('t3.2.2a','preferredlifetime'))
-        self.__config_setup1_1.set_routerlifetime(self.__config.get('t3.2.2a','routerlifetime'))
-        self.__config_setup1_1.set_reachabletime(self.__config.get('t3.2.2a','reach_time'))
-        self.__config_setup1_1.set_retranstimer(self.__config.get('t3.2.2a','retrans_time'))        
+        self.__config_setup1_1.set_flag_M(self.__config.get('t3.2.2b','flag_m'))
+        self.__config_setup1_1.set_flag_0(self.__config.get('t3.2.2b','flag_o'))
+        self.__config_setup1_1.set_flag_chlim(self.__config.get('t3.2.2b','flag_chlim'))
+        self.__config_setup1_1.set_flag_L(self.__config.get('t3.2.2b','flag_l'))
+        self.__config_setup1_1.set_flag_A(self.__config.get('t3.2.2b','flag_a'))
+        self.__config_setup1_1.set_flag_R(self.__config.get('t3.2.2b','flag_r'))
+        self.__config_setup1_1.set_flag_prf(self.__config.get('t3.2.2b','flag_prf'))
+        self.__config_setup1_1.set_validlifetime(self.__config.get('t3.2.2b','validlifetime'))
+        self.__config_setup1_1.set_preferredlifetime(self.__config.get('t3.2.2b','preferredlifetime'))
+        self.__config_setup1_1.set_routerlifetime(self.__config.get('t3.2.2b','routerlifetime'))
+        self.__config_setup1_1.set_reachabletime(self.__config.get('t3.2.2b','reach_time'))
+        self.__config_setup1_1.set_retranstimer(self.__config.get('t3.2.2b','retrans_time'))        
         self.__config_setup1_1.set_intervalo(self.__config.get('t1.6.6b','intervalo'))
         self.__config_setup1_1.set_prefix_addr(self.__config.get('setup1-1_advertise','ia_pd_address'))
-        self.__config_setup1_1.set_dhcp_t1(self.__config.get('t3.2.2a','dhcp_t1'))
-        self.__config_setup1_1.set_dhcp_t2(self.__config.get('t3.2.2a','dhcp_t2'))
-        self.__config_setup1_1.set_dhcp_preflft(self.__config.get('t3.2.2a','dhcp_preflft'))
-        self.__config_setup1_1.set_dhcp_validlft(self.__config.get('t3.2.2a','dhcp_validlft'))
-        self.__config_setup1_1.set_dhcp_plen(self.__config.get('t3.2.2a','dhcp_plen'))
+        self.__config_setup1_1.set_dhcp_t1(self.__config.get('t3.2.2b','dhcp_t1'))
+        self.__config_setup1_1.set_dhcp_t2(self.__config.get('t3.2.2b','dhcp_t2'))
+        self.__config_setup1_1.set_dhcp_preflft(self.__config.get('t3.2.2b','dhcp_preflft'))
+        self.__config_setup1_1.set_dhcp_validlft(self.__config.get('t3.2.2b','dhcp_validlft'))
+        self.__config_setup1_1.set_dhcp_plen(self.__config.get('t3.2.2b','dhcp_plen'))
    
     def set_flags_lan(self):
         self.__config_setup_lan.set_elapsetime(self.__config.get('solicitlan','elapsetime'))
@@ -83,7 +85,7 @@ class Test322a:
             self.__config_setup_lan.set_ipv6_src(self.__config.get('lan','global_wan_addr'))
             self.__config_setup_lan.set_ether_src(self.__config.get('lan','mac'))
             self.__config_setup_lan.set_ether_dst(self.__config_setup_lan.get_mac_ceRouter())
-            self.__config_setup_lan.set_ipv6_dst(self.__config.get('t3.2.2a','tn3_ip'))
+            self.__config_setup_lan.set_ipv6_dst(self.__config.get('t3.2.2b','tn3_ip'))
             self.__sendmsgs.send_echo_request_lan(self.__config_setup_lan)
         
     def run_Lan(self):
@@ -96,6 +98,7 @@ class Test322a:
         time_over = False
         send_ra = False
         send_na_lan = False
+        reset_test1 = False
         self.set_flags_lan()
         self.__config_setup_lan.set_setup_lan_start()
         while not self.__queue_lan.full():
@@ -201,7 +204,8 @@ class Test322a:
                     t_test1 = t_test1 + 1
                     if t_test1 % 5 == 0: 
                         self.ping_tn3()
-                        
+                        print('imprimindo relogio ping')
+                        print(t_test1)       
 
                     # if pkt.haslayer(ICMPv6EchoRequest):
 
@@ -237,6 +241,12 @@ class Test322a:
                             self.__config_setup_lan.set_lla(self.__config.get('lan','mac_address'))
                             self.__config_setup_lan.set_mac_ceRouter(pkt[Ether].src)
                             self.__sendmsgs.send_icmp_na_lan(self.__config_setup_lan)
+                else: 
+                    self.stop_ping_OK = True    
+            if  self.part2_lan_start and not reset_test1:
+                t_test1 = 0
+                reset_test1 = True
+                
 
 
 
@@ -245,7 +255,7 @@ class Test322a:
         self.__config_setup1_1.set_ether_dst(self.__config.get('multicast','all_mac_nodes'))
         self.__config_setup1_1.set_ipv6_src(self.__config.get('wan','ra_address'))
         self.__config_setup1_1.set_ipv6_dst(self.__config.get('multicast','all_nodes_addr'))
-        self.__sendmsgs.send_tr1_RA(self.__config_setup1_1)
+        self.__sendmsgs.send_tr1_RA2(self.__config_setup1_1)
     
 
 
@@ -281,12 +291,12 @@ class Test322a:
         self.__config_setup1_1.set_mac_ceRouter(pkt[Ether].src)
         self.__sendmsgs.send_icmp_na(self.__config_setup1_1)
     def neighbor_advertise_global_tn3(self,pkt):
-        self.__config_setup1_1.set_ipv6_src(self.__config.get('t3.2.2a','tn3_ip'))
-        self.__config_setup1_1.set_ether_src(self.__config.get('t3.2.2a','tn3_mac'))
+        self.__config_setup1_1.set_ipv6_src(self.__config.get('t3.2.2b','tn3_ip'))
+        self.__config_setup1_1.set_ether_src(self.__config.get('t3.2.2b','tn3_mac'))
         self.__config_setup1_1.set_ether_dst(pkt[Ether].src)
         self.__config_setup1_1.set_ipv6_dst(pkt[IPv6].src)
-        self.__config_setup1_1.set_tgt(self.__config.get('t3.2.2a','tn3_ip'))
-        self.__config_setup1_1.set_lla(self.__config.get('t3.2.2a','tn3_mac'))
+        self.__config_setup1_1.set_tgt(self.__config.get('t3.2.2b','tn3_ip'))
+        self.__config_setup1_1.set_lla(self.__config.get('t3.2.2b','tn3_mac'))
         self.__config_setup1_1.set_mac_ceRouter(pkt[Ether].src)
         self.__sendmsgs.send_icmp_na(self.__config_setup1_1)
 
@@ -308,8 +318,9 @@ class Test322a:
         time_over = False
         start_time_count = False
         finish_wan = False
-        self.__config_setup1_1.set_pd_prefixlen(self.__config.get('t3.2.2a','pd_prefixlen')) 
-        self.__config_setup1_1.set_routerlifetime(self.__config.get('t3.2.2a','routerlifetime')) 
+        part1_OK = False
+        self.__config_setup1_1.set_pd_prefixlen(self.__config.get('t3.2.2b','pd_prefixlen')) 
+        self.__config_setup1_1.set_routerlifetime(self.__config.get('t3.2.2b','routerlifetime')) 
         while not self.__queue_wan.full():
             if self.__queue_wan.empty():
                 if t_test <= 300:
@@ -320,8 +331,10 @@ class Test322a:
                         #self.ping()
                     
                     if start_time_count:
-                        if time1 < 40:
+                        if time1 < 600:
                             time1 = time1 + 1
+                            # print('imprimindo relogio')
+                            # print(time1)
                                 #if time1 % 5 == 0: 
                                 #self.ping()
 
@@ -412,22 +425,49 @@ class Test322a:
 
                     if not self.__finish_wan:
                         start_time_count = True
-                        if time1 < 40:
+                        if time1 < 50:
                             #if time1 % 5 == 0: 
                                 #self.ping()
-                            if pkt.haslayer(ICMPv6EchoRequest):
+                            if part1_OK == False:
+                                if pkt.haslayer(ICMPv6EchoRequest):
 
-                                logging.info('Reprovado Teste 2.7.3a - Recebido ICMPv6EchoRequest na WAN sendo que Routerlifime anunciado é zero')
-                                self.__packet_sniffer_wan.stop() 
+                                #logging.info('Reprovado Teste 2.7.3a - Recebido ICMPv6EchoRequest na WAN sendo que Routerlifime anunciado é zero')
+                                    part1_OK = True
 
-                                #print('AQUI-2.0')
-                                self.__packet_sniffer_lan.stop()
-                                self.__finish_wan = True 
-                                self.__fail_test = False
-                                return False
+                            if self.part2_lan_start:
+                                if pkt.haslayer(ICMPv6EchoRequest):
+                                    logging.info('Reprovado Teste 2.7.3a - Recebido ICMPv6EchoRequest na WAN sendo que Routerlifime anunciado é zero')
+                                    self.__finish_wan = True 
+                                    self.__fail_test = False
+                                    return False
+                            if part1_OK and not self.part2_lan_start:
+                                print('enviado1')
+                                self.__config_setup1_1.set_routerlifetime('0')
+                                self.__config_setup1_1.set_reachabletime('0')
+                                self.__config_setup1_1.set_retranstimer('0') 
+
+                                self.__sendmsgs.send_tr1_RA2(self.__config_setup1_1)
+                                print('limpando')
+                                while not self.stop_ping_OK:
+                                    time.sleep(1)
+                                    print('aguardando terminar')
+                                    
+                                time.sleep(10)
+                                while not self.__queue_wan.empty():
+                                    self.__queue_wan.get()
+                                
+                                print('enviando 3')
+                                for x in range(3):
+                                    time.sleep(1)
+                                    x = x+1
+                                    self.__sendmsgs.send_tr1_RA2(self.__config_setup1_1)
+                                self.part2_lan_start = True
+
+            
+
 
                             if pkt.haslayer(ICMPv6ND_NS):
-                                if pkt[ICMPv6ND_NS].tgt == self.__config.get('t3.2.2a','tn3_ip'):
+                                if pkt[ICMPv6ND_NS].tgt == self.__config.get('t3.2.2b','tn3_ip'):
                                     print('glboal')
                                     self.neighbor_advertise_global_tn3(pkt)
 
