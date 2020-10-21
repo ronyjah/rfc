@@ -35,7 +35,7 @@ class Test323b:
         self.__wan_mac_tr1 = self.__config.get('wan','wan_mac_tr1')
         self.__link_local_addr = self.__config.get('wan','link_local_addr')
         self.__all_nodes_addr = self.__config.get('multicast','all_nodes_addr')
-        self.__test_desc = self.__config.get('tests','3.2.3a')
+        self.__test_desc = self.__config.get('tests','3.2.3b')
         self.__t_lan = None
         self.__finish_wan = False
         self.part2_lan_start = False
@@ -85,7 +85,7 @@ class Test323b:
             self.__config_setup_lan.set_ipv6_src(self.__config.get('lan','global_wan_addr'))
             self.__config_setup_lan.set_ether_src(self.__config.get('lan','mac'))
             self.__config_setup_lan.set_ether_dst(self.__config_setup_lan.get_mac_ceRouter())
-            self.__config_setup_lan.set_ipv6_dst(self.__config.get('t3.2.3a','tn3_ip'))
+            self.__config_setup_lan.set_ipv6_dst(self.__config.get('t3.2.3b','unreachable_ip'))
             self.__sendmsgs.send_echo_request_lan(self.__config_setup_lan)
         
     def run_Lan(self):
@@ -199,50 +199,56 @@ class Test323b:
                         
             if self.__config_setup1_1.get_setup1_1_OK():
                 if pkt[Ether].src == self.__config.get('lan','mac_address'):
-
-
-                self.ping_unreac_ip()
                     continue
+                if t_test1 < 30:
+                    t_test1 = t_test1 + 1
+                    if t_test1 % 5 == 0:
+
+                        self.ping_unreac_ip()
+                    
                 # if t_test1 < 30:
                 #     t_test1 = t_test1 + 1
                 #     if t_test1 % 5 == 0: 
                 #         self.ping_tn3()
                 #         print('imprimindo relogio ping')
                 #         print(t_test1)       
-                            if pkt.haslayer(ICMPv6DestUnreach):
-                                self.__packet_sniffer_wan.stop() 
-                                self.__packet_sniffer_lan.stop()
-                                logging.info('Teste 3.7.2a - APROVADO. Não passou pacotes da LAN para WAN devido ao RouterLife time estar zerado')
-                                return True   
+                    if pkt.haslayer(ICMPv6DestUnreach):
+                        self.__packet_sniffer_wan.stop() 
+                        self.__packet_sniffer_lan.stop()
+                        logging.info('Teste 3.7.2a - APROVADO. Não passou pacotes da LAN para WAN devido ao RouterLife time estar zerado')
+                        return True   
 
 
-                if pkt.haslayer(ICMPv6ND_NS):
+                    if pkt.haslayer(ICMPv6ND_NS):
 
-                    if pkt[ICMPv6ND_NS].tgt == self.__config.get('lan','global_wan_addr'):
-                        self.__config_setup_lan.set_ipv6_src(self.__config.get('lan','global_wan_addr'))
-                        self.__config_setup_lan.set_ether_src(self.__config.get('lan','mac_address'))
-                        self.__config_setup_lan.set_ether_dst(pkt[Ether].src)
-                        self.__config_setup_lan.set_ipv6_dst(pkt[IPv6].src)
-                        self.__config_setup_lan.set_tgt(self.__config.get('lan','global_wan_addr'))
-                        self.__config_setup_lan.set_lla(self.__config.get('lan','mac_address'))
-                        self.__config_setup_lan.set_mac_ceRouter(pkt[Ether].src)
-                        self.__sendmsgs.send_icmp_na_lan(self.__config_setup_lan)
-                        
-                    if pkt[ICMPv6ND_NS].tgt == self.__config.get('lan','lan_local_addr'):
+                        if pkt[ICMPv6ND_NS].tgt == self.__config.get('lan','global_wan_addr'):
+                            self.__config_setup_lan.set_ipv6_src(self.__config.get('lan','global_wan_addr'))
+                            self.__config_setup_lan.set_ether_src(self.__config.get('lan','mac_address'))
+                            self.__config_setup_lan.set_ether_dst(pkt[Ether].src)
+                            self.__config_setup_lan.set_ipv6_dst(pkt[IPv6].src)
+                            self.__config_setup_lan.set_tgt(self.__config.get('lan','global_wan_addr'))
+                            self.__config_setup_lan.set_lla(self.__config.get('lan','mac_address'))
+                            self.__config_setup_lan.set_mac_ceRouter(pkt[Ether].src)
+                            self.__sendmsgs.send_icmp_na_lan(self.__config_setup_lan)
+                            
+                        if pkt[ICMPv6ND_NS].tgt == self.__config.get('lan','lan_local_addr'):
 
-                        self.__config_setup_lan.set_ipv6_src(self.__config.get('lan','lan_local_addr'))
-                        self.__config_setup_lan.set_ether_src(self.__config.get('lan','mac_address'))
-                        self.__config_setup_lan.set_ether_dst(pkt[Ether].src)
-                        self.__config_setup_lan.set_ipv6_dst(pkt[IPv6].src)
-                        self.__config_setup_lan.set_tgt(self.__config.get('lan','lan_local_addr'))
-                        self.__config_setup_lan.set_lla(self.__config.get('lan','mac_address'))
-                        self.__config_setup_lan.set_mac_ceRouter(pkt[Ether].src)
-                        self.__sendmsgs.send_icmp_na_lan(self.__config_setup_lan)
+                            self.__config_setup_lan.set_ipv6_src(self.__config.get('lan','lan_local_addr'))
+                            self.__config_setup_lan.set_ether_src(self.__config.get('lan','mac_address'))
+                            self.__config_setup_lan.set_ether_dst(pkt[Ether].src)
+                            self.__config_setup_lan.set_ipv6_dst(pkt[IPv6].src)
+                            self.__config_setup_lan.set_tgt(self.__config.get('lan','lan_local_addr'))
+                            self.__config_setup_lan.set_lla(self.__config.get('lan','mac_address'))
+                            self.__config_setup_lan.set_mac_ceRouter(pkt[Ether].src)
+                            self.__sendmsgs.send_icmp_na_lan(self.__config_setup_lan)
                 else: 
-                    self.stop_ping_OK = True    
-            if  self.part2_lan_start and not reset_test1:
-                t_test1 = 0
-                reset_test1 = True
+                    logging.info('Reprovado Teste 3.2.3b - Timeout e não recebeu ICMPv6 Destino Unreachable')
+                    self.__packet_sniffer_wan.stop() 
+                    self.__packet_sniffer_lan.stop()
+                    self.__finish_wan = True 
+                    self.__fail_test = False
+                    return False    
+
                 
 
     def rourter_advertise(self):
@@ -292,14 +298,14 @@ class Test323b:
         self.__sendmsgs.send_icmp_na(self.__config_setup1_1)
 
     def run(self):
-        #self.__t_lan =  Thread(target=self.run_Lan,name='LAN_Thread')
-        #self.__t_lan.start()
+        self.__t_lan =  Thread(target=self.run_Lan,name='LAN_Thread')
+        self.__t_lan.start()
         
         self.__packet_sniffer_wan = PacketSniffer('Test273b-WAN',self.__queue_wan,self,self.__config,self.__wan_device_tr1)
         self.__packet_sniffer_wan.start()
         
         self.__packet_sniffer_lan = PacketSniffer('Test273b-LAN',self.__queue_lan,self,self.__config,self.__lan_device)
-        #test_lan = self.__packet_sniffer_lan.start()
+        test_lan = self.__packet_sniffer_lan.start()
         self.__config_setup1_1.set_ra2()
         self.set_flags()
         logging.info(self.__test_desc)
